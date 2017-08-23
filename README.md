@@ -25,4 +25,4 @@ Specifics surrounding program at the moment of creating:
 - pandas-datareader (0.5.0) [package]
 - matplotlib (2.0.2) [package]
 - json (2.0.9) [package]
-- (and was run/tested under macOS 10).
+- (and was run/tested under macOS 10)
