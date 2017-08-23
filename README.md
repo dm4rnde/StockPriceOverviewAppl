@@ -1,8 +1,9 @@
 # StockPriceOverviewAppl
 
-**Simple/basic GUI program written in Python** that **uses tkinter** as GUI package and allows user:
-- add/remove stock symbols to/from list;
-- observe current price and historical price change of selected stock.
+Simple/**basic GUI program written in Python** that **uses tkinter** as GUI package and allows user to:
+- see current price of selected stock;
+- observe historical price change of selected stock on a graph;
+- add/remove stock symbols to/from list.
 
 <br>
 
