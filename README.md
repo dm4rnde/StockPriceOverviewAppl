@@ -9,6 +9,14 @@ Simple/**basic GUI program written in Python** that **uses tkinter** as GUI pack
 
 <br>
 
+#### In case program does not start/run
+
+*Note #1*. Haven't tested with other than mentioned specifics - it might and then again it might not work with different setup.<br> 
+*Note #2*. There is always possiblity that when running some Python program written by others, that some packages are not available/not in computer/environment where it is being run (then have to try to install them manually - but this is already, out of scope of this document, and specific to every python setup/environment).<br>
+*Note #3*. And there is some awkward possibility that program might not work in certain circumstances at all, or some other adjustments are needed.<br>
+
+<br>
+
 Specifics that program was created with:
 - Python 3.6.2
 - tkinter 8.5
@@ -18,11 +26,3 @@ Specifics that program was created with:
 - matplotlib (2.0.2) [package]
 - json (2.0.9) [package]
 - (and was run/tested under macOS 10).
-
-<br>
-
-#### In case program does not start/run
-
-*Note #1*. Haven't tested with other than mentioned specifics - it might and then again it might not work with different setup.<br> 
-*Note #2*. There is always possiblity that when running some Python program written by others, that some packages are not available/not in computer/environment where it is being run (then have to try to install them manually - but this is already, out of scope of this document, and specific to every python setup/environment).<br>
-*Note #3*. And there is some awkward possibility that program might not work in certain circumstances at all, or some other adjustments are needed.<br>
