@@ -1,6 +1,6 @@
 # StockPriceOverviewAppl
 
-It is simple/basic GUI program written in Python 3 and uses tkinter as GUI package.
+It is a simple/basic GUI program written in Python and uses tkinter as GUI package.
 
 Program:
 - allows user to add/remove stock symbols to/from list;
