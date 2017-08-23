@@ -6,7 +6,7 @@
 
 <br>
 
-Was created with following specifics:
+About specifics (that program was created with):
 - Python 3.6.2
 - tkinter 8.5
 - googlefinance (0.7) [package]
