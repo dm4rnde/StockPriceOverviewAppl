@@ -17,6 +17,8 @@ Specifics that program was created with:
 - json (2.0.9) [package]
 - (and was run/tested under macOS 10).
 
+<br>
+
 #### In case program does not start/run
 
 Note #1: Haven't tested this program with other than mentioned specifics - it might and then again it might not work with different setup.<br> 
