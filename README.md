@@ -17,7 +17,7 @@ Simple/**basic GUI program written in Python** that **uses tkinter** as GUI pack
 
 <br>
 
-Specifics that program was created with:
+Specifics surrounding program at the moment of creating:
 - Python 3.6.2
 - tkinter 8.5
 - googlefinance (0.7) [package]
