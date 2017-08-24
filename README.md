@@ -19,7 +19,7 @@ Application allows user to:
 
 <br>
 
-Specifics (that encircled application at the moment of development):
+Specifics (that surrounded application at the moment of development):
 - Python 3.6.2
 - tkinter 8.5
 - googlefinance (0.7) [package]
