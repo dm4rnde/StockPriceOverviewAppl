@@ -2,7 +2,9 @@
 
 <br>
 
-Short and **basic GUI application written in Python** that **uses tkinter** as GUI package and allows user to:
+Short and **basic GUI application written in Python** that **uses tkinter**. 
+
+Application allows user to:
 - see current price of selected stock;
 - observe historical price change of selected stock on a graph;
 - add/remove stock symbols to/from list.
