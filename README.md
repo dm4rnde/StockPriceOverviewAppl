@@ -19,7 +19,7 @@ Application allows user to:
 
 <br>
 
-Specifics surrounding program at the moment of creation:
+Specifics (surrounding program at the moment of creation):
 - Python 3.6.2
 - tkinter 8.5
 - googlefinance (0.7) [package]
