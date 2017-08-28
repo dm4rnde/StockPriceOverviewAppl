@@ -43,7 +43,7 @@ get back stock intended. For more, see NOTE1.
 """
 #Have tested application to work with:
     #FRA:DAI, ETR:DAI, BA, NYSE:LMT, F, TSLA, ETR:TL0, STO:VOLV-A, 
-    #FRA:AMZ, NYSE:LMT, ETR:BMW, NYSE:TM, TYO:7203, STO:STLO
+    #FRA:AMZ, NYSE:LMT, ETR:BMW, NYSE:TM, TYO:7203, STO:STLO, KRX:005380
     #
     #All other possibilities, have not been tested.
 #
@@ -69,7 +69,6 @@ delegated to another object)."""
 class StockPriceOverviewAppl(tk.Frame):
     
     feedbackNoteStr = ""
-    
     FEEDBACK_STR_NO_FEEDBACK = ''
     FEEDBACK_STR_ALREADY_LISTED = 'already listed'
     FEEDBACK_STR_NO_INTERNET = 'no Internet connection'
@@ -219,8 +218,18 @@ class StockPriceOverviewAppl(tk.Frame):
                 qryForGettingFullQuote = getQuotes(newSymbol.upper())
                 jsonDmps = dumps(qryForGettingFullQuote, indent=2)
                 df = read_json(jsonDmps)
-                #merge two column values to get global symbol
-                newSymbolsGlobal = str(df.at[0,"Index"]) + ":" + str(df.at[0,"StockSymbol"])
+                newSymbolNotGlobalPart = ""
+                #try using original entry as much as possible
+                #because returned from query data, edits a bit numbers
+                #(for example if to send KRX:005380 you get back
+                #KRS:5380, but now when sending latter, you will 
+                #not get back result)
+                if ":" not in newSymbol:
+                    newSymbolNotGlobalPart = newSymbol.upper()
+                    newSymbolsGlobal = str(df.at[0,"Index"]).upper() + ":" + newSymbolNotGlobalPart.upper()
+                else:
+                    #being global already 
+                    newSymbolsGlobal = newSymbol.upper()
             except HTTPError as e:
                 self.updateFeedbackNoteLabelText(self.FEEDBACK_STR_QUOTE_NOT_FOUND)
                 print("expected error","during quote confirm:", type(e), "≤≥", e)
@@ -236,8 +245,6 @@ class StockPriceOverviewAppl(tk.Frame):
             
             if ":" not in newSymbolsGlobal:
                 return
-            
-            newSymbolsGlobal = newSymbolsGlobal.upper()
             
             #duplicate check
             currentSymbols = []
@@ -821,11 +828,7 @@ if __name__ == '__main__':
 """ 
 errors, issues, good-to-haves:
 
-    errors unsolved:
-        (none known - could be, but testing was limited here)
-      
     other soft issues:
-        - self.location(150,150) is not working
         - need testing of "#TODO needs review" part 
     
     features good-to-haves for future:

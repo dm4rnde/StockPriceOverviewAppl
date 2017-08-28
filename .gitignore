@@ -1,0 +1,33 @@
+# Project specific files #
+# add here
+iters_bef_iteration28/
+StateDataForStockPriceOverviewAppl.csv
+
+# generated files
+bin/
+gen/
+.class
+target/
+
+# Eclipse project files
+.classpath
+.settings
+.project
+.pydevproject
+
+# Intellij project files
+*.iml
+*.ipr
+*.iws
+.idea/
+
+# OS generated files 
+*/.DS_Store
+.DS_Store
+.DS_Store?
+/.DS_Store
+.Trashes
+Thumbs.db
+*~
+.~*#
+.*.swp
