@@ -2,10 +2,9 @@
 
 <br>
 
-Because other module this app depends on does not 
-<br> work anymore (google finance side interrupted).
-<br>
-Because of this **CHART SIDE does NOT WORK at the moment**.
+Because other module this app depends on does not work 
+<br>anymore (google finance side interrupted). <br>
+Because of this **CHART SIDE does NOT WORK** at the moment.
 
 <br>
 
