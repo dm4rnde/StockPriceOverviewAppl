@@ -1,12 +1,13 @@
-# Stock Price Overview Appl
-
-<br>
-
 > Because module this app depends on does 
 > not work anymore (google finance side interrupted)
 > **chart side does NOT WORK** at the moment.
 
 <br>
+
+# Stock Price Overview Appl
+
+<br>
+
 
 Short and **basic GUI application written in Python** that **uses tkinter** (created for practice and study purpose only). 
 
