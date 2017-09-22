@@ -2,8 +2,7 @@
 
 <br>
 
-Currently chart side (historical data) does not work, 
-<br> because other module this app depends on does not 
+Because other module this app depends on does not 
 <br> work anymore (google finance side interrupted).
 <br>
 Because of this **CHART SIDE does NOT WORK at the moment**.
