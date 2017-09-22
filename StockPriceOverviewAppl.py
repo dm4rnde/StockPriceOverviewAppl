@@ -1,4 +1,19 @@
 #%%
+"""
+Copyright 2017 Dm4Rnde
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+ http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+"""
 import tkinter as tk
 
 from tkinter import ttk
@@ -11,9 +26,10 @@ from datetime import datetime
 from datetime import timedelta
 import calendar
 
-from googlefinance import getQuotes
+#from googlefinance import getQuotes
 
 from pandas import DataFrame
+from pandas import concat as concatdfs
 from pandas import read_json
 from pandas import read_csv
 from pandas.errors import EmptyDataError
@@ -21,15 +37,19 @@ from pandas_datareader.data import DataReader
 from pandas_datareader._utils import RemoteDataError
 
 from json import dumps
+#from json import load as loadsjson
+import json
 
+from requests import get as requestsget
 from requests.exceptions import ConnectionError
+
 from urllib.error import URLError
 from urllib.error import HTTPError
 
 from traceback import format_exc
 
 """
-Prerequirements: 
+Pre-requirements: 
     - requires connection to Internet
 
 When entering new stock, it might be easier to get correct/intended stock back if 
@@ -43,7 +63,7 @@ get back stock intended. For more, see NOTE1.
 """
 #Have tested application to work with:
     #FRA:DAI, ETR:DAI, BA, NYSE:LMT, F, TSLA, ETR:TL0, STO:VOLV-A, 
-    #FRA:AMZ, NYSE:LMT, ETR:BMW, NYSE:TM, TYO:7203, STO:STLO, KRX:005380
+    #FRA:AMZ, ETR:BMW, NYSE:TM, TYO:7203, STO:STLO, KRX:005380
     #
     #All other possibilities, have not been tested.
 #
@@ -215,9 +235,12 @@ class StockPriceOverviewAppl(tk.Frame):
             try:
                 #this query is made to get actual global stock quote
                 #just in case user did not provide global
-                qryForGettingFullQuote = getQuotes(newSymbol.upper())
-                jsonDmps = dumps(qryForGettingFullQuote, indent=2)
-                df = read_json(jsonDmps)
+                #qryForGettingFullQuote = getQuotes(newSymbol.upper())
+                #jsonDmps = dumps(qryForGettingFullQuote, indent=2)
+                #df = read_json(jsonDmps)
+                templist = []
+                templist.append(newSymbol.upper())
+                df = self.memManager.getQuotesWhenHavingListOfGloballyUniqueStockSymbols(templist)
                 newSymbolNotGlobalPart = ""
                 #try using original entry as much as possible
                 #because returned from query data, edits a bit numbers
@@ -232,11 +255,11 @@ class StockPriceOverviewAppl(tk.Frame):
                     newSymbolsGlobal = newSymbol.upper()
             except HTTPError as e:
                 self.updateFeedbackNoteLabelText(self.FEEDBACK_STR_QUOTE_NOT_FOUND)
-                print("expected error","during quote confirm:", type(e), "≤≥", e)
+                print("expected error","during quote confirm:", type(e), "≤≥", e, "\n")
                 return
             except URLError as e:
                 self.updateFeedbackNoteLabelText(self.FEEDBACK_STR_NO_INTERNET)
-                print("expected error", "during quote confirm:", type(e), "≤≥", e)
+                print("expected error", "during quote confirm:", type(e), "≤≥", e, "\n", format_exc())
                 return
             except Exception as e:
                 self.updateFeedbackNoteLabelText(self.FEEDBACK_STR_NO_FEEDBACK)
@@ -295,7 +318,7 @@ class StockPriceOverviewAppl(tk.Frame):
 
         except URLError as e:
             self.updateFeedbackNoteLabelText(self.FEEDBACK_STR_NO_INTERNET)
-            print("expected error", "during output area create:", type(e), "≤≥", e)
+            print("error", "during output area create:", type(e), "≤≥", e, "\n", format_exc())
         except Exception as e:
             self.updateFeedbackNoteLabelText(self.FEEDBACK_STR_NO_FEEDBACK)
             print("error", "during output area create:", type(e), "≤≥", e, "\n", format_exc())
@@ -526,13 +549,13 @@ class StockPriceOverviewAppl(tk.Frame):
                 self.updateFeedbackNoteLabelText(self.FEEDBACK_STR_NO_STOCK_SELECTED)
             
         except RemoteDataError as e:                
-            print("expected error", 'skipped plotting because of:', type(e), "≤≥", e)
+            print("expected error", 'skipped plotting because of:', type(e), "≤≥", e, "\n", format_exc())
             self.updateFeedbackNoteLabelText(self.FEEDBACK_STR_NO_HISTORICAL_DATA_FOUND)
 
             self.cleanUpPlotArea()
 
         except ConnectionError as e:
-            print("expected error", 'skipped plotting because of:', type(e), "≤≥", e)
+            print("expected error", 'skipped plotting because of:', type(e), "≤≥", e, "\n", format_exc())
             self.updateFeedbackNoteLabelText(self.FEEDBACK_STR_NO_INTERNET)
             
             self.cleanUpPlotArea()
@@ -572,7 +595,7 @@ class StockPriceOverviewAppl(tk.Frame):
             #never mind, as long as the note string has been changed
             #(here, above) the component will have this text
             #in it once it is being constructed
-            print("expected error", "during update of feedback label", type(e), e)
+            print("expected error", "during update of feedback label", type(e), e, "\n", format_exc())
         except Exception as e:
             print("error", "during update of feedback label", type(e), e, "\n", format_exc())
         
@@ -590,7 +613,7 @@ class StockPriceOverviewAppl(tk.Frame):
             self.updateFeedbackNoteLabelText(self.FEEDBACK_STR_FEEDBACK)
         except URLError as e:
             self.updateFeedbackNoteLabelText(self.FEEDBACK_STR_NO_INTERNET)
-            print("expected error", "during refresh output area", type(e), e)
+            print("expected error", "during refresh output area", type(e), e, "\n", format_exc())
         except Exception as e:
             print("error", "during refresh output area", type(e), e, "\n", format_exc())
         finally:
@@ -737,10 +760,43 @@ class SPOAMemoryManager(tk.Frame):
         dataFr = self.fetchAndPrepareDataFrameFilledWithLatestStockPrices()
         #fill memory
         self.renewEntireMemory(dataFr)
-    
+  
+    def getQuotesWhenHavingListOfGloballyUniqueStockSymbols(self, listOfStocks):
+        """ lis - list of symbols where each element
+                  has global symbol form; example: 
+                      ['NASDAQ:TSLA', 'ETR:TL0', 'NASDAQ:AMZN', 
+                      'NYSE:F', 'STO:VOLV-A', 'ETR:BMW', 'NYSE:LMT', 
+                      'FRA:AMZ', 'NASDAQ:AAPL', 'ETR:VOW', 
+                      'KRX:005380', 'KRX:000270']
+        """ 
+        colNames = ['Index','LastTradeDateTimeLong','LastTradePrice','StockSymbol']
+        workdf = DataFrame(columns=colNames)
+        
+        #represents current time; as google finance should be real time
+        dateAndTimeNow = datetime.now().strftime("%Y-%d-%m %H:%M")
+
+        for i in listOfStocks:
+            req = requestsget('https://finance.google.com/finance?q='+i+'&output=json')
+            
+            if req.status_code in ([200]):
+                jdat = json.loads(req.content[6:-2].decode('unicode_escape'))
+                temptupl = (jdat['exchange'],dateAndTimeNow,jdat['l'],jdat['symbol'])
+                temprowlist = []
+                temprowlist.append(temptupl)
+                tempdf = DataFrame(temprowlist,columns=colNames)
+                tempdfstomerge = [workdf,tempdf] 
+                workdf = concatdfs(tempdfstomerge)
+            else:
+                #TODO
+                pass    
+        
+        return workdf
+
     def fetchLatestStockPricesForStocksGiven(self, listOfStocks):
         """Returns json list, where every json unformatted"""
-        return getQuotes(listOfStocks)
+        #print(listOfStocks)
+        #return getQuotes(listOfStocks)
+        return self.getQuotesWhenHavingListOfGloballyUniqueStockSymbols(listOfStocks)
     
     def fetchAndPrepareDataFrameFilledWithLatestStockPrices(self):
         
@@ -751,14 +807,21 @@ class SPOAMemoryManager(tk.Frame):
         if len(self.listOfSymbolsWhereEachElementHasGlobalSymbolForm) > 0:
             #query symbol's latest price info
             #(data received will be in json format)
-            latestStockStateFetched = self.fetchLatestStockPricesForStocksGiven(self.listOfSymbolsWhereEachElementHasGlobalSymbolForm)
-            jsonDmps = dumps(latestStockStateFetched, indent = 2)
+            try:
+                latestStockStateFetched = self.fetchLatestStockPricesForStocksGiven(self.listOfSymbolsWhereEachElementHasGlobalSymbolForm)
+            except Exception as e:
+                #this happens when dependency/service (here: google finance) will change
+                print('CRITICAL: problem with fetching stock data; program can not start', 
+                      "\n", type(e), "\n", e, "\n", format_exc())
+                #raise e
+                exit()
+            #jsonDmps = dumps(latestStockStateFetched, indent = 2)
             #ask pandas help in converting from json to dataframe
-            df = read_json(jsonDmps)
+            #df = read_json(jsonDmps)
             
             #prepare format
             #leave only 4 columns
-            df = df.loc[:,["Index",'LastTradeDateTimeLong', 'LastTradePrice', 'StockSymbol']].copy()
+            df = latestStockStateFetched.loc[:,["Index",'LastTradeDateTimeLong', 'LastTradePrice', 'StockSymbol']].copy()
         #else:
             #no symbols; then user have deleted all symbols from the list; 
             #rely on empty dataframe (empty is also a state)
@@ -828,6 +891,16 @@ if __name__ == '__main__':
 """ 
 errors, issues, good-to-haves:
 
+    errors:
+        IN PROGRESS, SOLVING:
+            "currently app not functioning because dependency of getQuotes (latter is not working anymore)"
+            (https://github.com/hongtaocai/googlefinance/issues/39)!
+              [getQuotes of googlefinance module is not functioning 
+                (some notes https://github.com/hongtaocai/googlefinance/issues/39,
+                https://stackoverflow.com/a/46081537),
+                rewriting to not depend on getQuotes of googlefinance;
+                fixing/rewriting/testing IN PROGRESS]
+        
     other soft issues:
         - need testing of "#TODO needs review" part 
     
