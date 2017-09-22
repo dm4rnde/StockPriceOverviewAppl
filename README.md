@@ -3,7 +3,7 @@
 <br>
 
 > Because module this app depends on does 
-> not work anymore (google finance side interrupted).<br>
+> not work anymore (google finance side interrupted)
 > this **CHART SIDE does NOT WORK** at the moment.
 
 <br>
