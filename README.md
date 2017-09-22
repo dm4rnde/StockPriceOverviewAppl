@@ -1,3 +1,5 @@
+<br>
+
 > Because module this app depends on does 
 > not work anymore (google finance side interrupted)
 > **chart side does NOT WORK** at the moment.
