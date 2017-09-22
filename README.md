@@ -22,7 +22,6 @@ Application allows user to:
 Specifics (that surrounded application at the moment of development):
 - Python 3.6.2
 - tkinter 8.5
-- googlefinance (0.7) [package]
 - pandas (0.20.3) [package]
 - pandas-datareader (0.5.0) [package]
 - matplotlib (2.0.2) [package]
