@@ -2,13 +2,6 @@
 
 <br>
 
-**Currently, because getQuotes of googlefinance is 'turned off'
-(some notes https://github.com/hongtaocai/googlefinance/issues/39,
-https://stackoverflow.com/a/46081537),
-this program does not work - must rewrite whole program, throw away
-the googlefinance part, and use yahoo or find another option instead***
-
-
 Short and **basic GUI application written in Python** that **uses tkinter**. 
 
 Application allows user to:
