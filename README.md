@@ -4,7 +4,7 @@
 
 > Because module this app depends on does 
 > not work anymore (google finance side interrupted)
-> this **CHART SIDE does NOT WORK** at the moment.
+> **chart side DOES NOT WORK** at the moment.
 
 <br>
 
