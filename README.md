@@ -26,4 +26,4 @@ Specifics (that surrounded application at the moment of development):
 - pandas-datareader (0.5.0) [package]
 - matplotlib (2.0.2) [package]
 - json (2.0.9) [package]
-- (run/tested under macOS 10)
+- (did run/tested under macOS 10)
