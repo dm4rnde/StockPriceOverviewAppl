@@ -2,7 +2,11 @@
 
 <br>
 
-Short and **basic GUI application written in Python** that **uses tkinter**. 
+**Currently chart side (historical data) does not work, because other module this app depends on does not work anymore (used google finance, which can not be used anymore)**
+
+<br>
+
+Short and **basic GUI application written in Python** that **uses tkinter** (created for practice and study purpose only). 
 
 Application allows user to:
 - see current price of selected stock

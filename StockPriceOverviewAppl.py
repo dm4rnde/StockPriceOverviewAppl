@@ -495,7 +495,8 @@ class StockPriceOverviewAppl(tk.Frame):
                 btime = datetime.strptime(dateEndOfToField, "%d.%m.%Y")
                  
                 oneStockDataOnDatesDF = DataReader(stockSymbolGlobalSelected, 'google', atime, btime)
-     
+                #TODO
+                
                 #actual plotting here
                 #take only the index column and the close column
                 #and make a plot
@@ -892,14 +893,9 @@ if __name__ == '__main__':
 errors, issues, good-to-haves:
 
     errors:
-        IN PROGRESS, SOLVING:
-            "currently app not functioning because dependency of getQuotes (latter is not working anymore)"
-            (https://github.com/hongtaocai/googlefinance/issues/39)!
-              [getQuotes of googlefinance module is not functioning 
-                (some notes https://github.com/hongtaocai/googlefinance/issues/39,
-                https://stackoverflow.com/a/46081537),
-                rewriting to not depend on getQuotes of googlefinance;
-                fixing/rewriting/testing IN PROGRESS]
+        chart side (historical data side) does not work anymore
+        - because of dependency, google finance side, has ceased
+        (https://github.com/pydata/pandas-datareader/issues/395)
         
     other soft issues:
         - need testing of "#TODO needs review" part 
