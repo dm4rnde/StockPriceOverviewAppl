@@ -2,7 +2,7 @@
 
 > Because module this app depends on does
 > not work anymore (google finance side interrupted)
-> **graph side (historical prices) does NOT WORK** at the moment.
+> **graph side (stock's historical prices) does NOT WORK** at the moment.
 
 <br>
 
