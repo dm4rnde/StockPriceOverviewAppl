@@ -6,7 +6,7 @@
 
 <br>
 
-# Stock Price Overview Appl
+# Stock Price Overview Application
 
 <br>
 
