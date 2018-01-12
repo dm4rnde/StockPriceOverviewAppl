@@ -34,7 +34,7 @@ from datetime import timedelta
 import calendar
 #from googlefinance import getQuotes
 
-#pandas, has BSD 3-Clause License, it is BSD-licensed library
+#license note: pandas, has BSD 3-Clause License, it is BSD-licensed library
 #http://pandas.pydata.org/pandas-docs/stable/overview.html#license
 #https://github.com/pandas-dev/pandas/blob/master/setup.py
 from pandas import DataFrame
