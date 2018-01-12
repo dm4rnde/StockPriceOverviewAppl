@@ -6,7 +6,7 @@
 
 <br>
 
-# Stock Price Overview Application
+# StockPriceOverviewAppl (Stock Price Overview Application)
 
 <br>
 
