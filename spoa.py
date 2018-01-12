@@ -1,6 +1,6 @@
 #%%
 """
-Copyright 2017 Dm4Rnde
+Copyright 2017 Dm4Rnde (dm4rnde at github.com)
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,20 +14,29 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
+"""
+spoa - Stock Price Overview Application
+"""
 import tkinter as tk
-
 from tkinter import ttk
 from tkinter import LEFT, RIGHT, BOTH, RAISED
+#license note: tkinter is part of python, then it is is probably licensed under PSFL (which is BSD compatible)
 
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+#license note: matplotlib, itself, uses only BSD code; is based on PSFL
+#                      in short: is, as is PSFL, BSD compatible (not GPL!)
+#https://matplotlib.org/2.0.2/devel/license.html#license-discussion
+#https://github.com/matplotlib/matplotlib/blob/master/setup.py
 
 from datetime import date
 from datetime import datetime
 from datetime import timedelta
 import calendar
-
 #from googlefinance import getQuotes
 
+#pandas, has BSD 3-Clause License, it is BSD-licensed library
+#http://pandas.pydata.org/pandas-docs/stable/overview.html#license
+#https://github.com/pandas-dev/pandas/blob/master/setup.py
 from pandas import DataFrame
 from pandas import concat as concatdfs
 from pandas import read_json
@@ -39,6 +48,7 @@ from pandas_datareader._utils import RemoteDataError
 from json import dumps
 #from json import load as loadsjson
 import json
+#license note: json is licensed under Apache2 (which is BSD compatible)
 
 from requests import get as requestsget
 from requests.exceptions import ConnectionError
@@ -896,7 +906,11 @@ errors, issues, good-to-haves:
         chart side (historical data side) does not work anymore
         - because of dependency, google finance side, has ceased
         (https://github.com/pydata/pandas-datareader/issues/395)
-        
+        14 Nov 2017 following did not work:
+            sudo pip3.6 install pandas_datareader --upgrade
+            (https://stackoverflow.com/a/46356247)
+            (because edit made to change that includes related url finance.google.com change,
+            does not build, https://github.com/pydata/pandas-datareader/issues/391)
     other soft issues:
         - need testing of "#TODO needs review" part 
     

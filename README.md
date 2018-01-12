@@ -29,11 +29,11 @@ Application allows user to:
 
 <br>
 
-Specifics (that surrounded application at the moment of development):
+Specifics (that surrounded application at the moment of development) and external libraries/modules/packages used:
 - Python 3.6.2
-- tkinter 8.5
-- pandas (0.20.3) [package]
-- pandas-datareader (0.5.0) [package]
-- matplotlib (2.0.2) [package]
-- json (2.0.9) [package]
-- (did run/tested under macOS 10)
+- tkinter 8.5 [module/package - standard Python interface to the Tk GUI toolkit] (is part of Python)
+- json (2.0.9) [python module] (is part of Python)
+- pandas (0.20.3) [module]
+- pandas-datareader (0.5.0) [module]
+- matplotlib (2.0.2) [module]
+- (did run/tested under macOS 10.12.6)

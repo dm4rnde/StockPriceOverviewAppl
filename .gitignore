@@ -2,6 +2,7 @@
 # add here
 iters_bef_iteration28/
 StateDataForStockPriceOverviewAppl.csv
+tmp/
 
 # generated files
 bin/
