@@ -29,6 +29,8 @@ Application allows user to:
 
 <br>
 
+#### Specifics
+
 Specifics (that surrounded application at the moment of development) and external libraries/modules/packages used:
 - Python 3.6.2
 - tkinter 8.5 [module/package - standard Python interface to the Tk GUI toolkit] (is part of Python)
