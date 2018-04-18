@@ -8,7 +8,7 @@ Short and **basic GUI application written in Python** that **uses tkinter**.
 
 <br>
 
-Application allows user to see current price of queried stock.
+Application allows to query latest price of given stock.
 <br>
 <br>
 

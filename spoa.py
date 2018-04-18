@@ -57,7 +57,7 @@ NOTE1:
         works with: 
             ETR:DAI, NYSE:LMT, F, TSLA, STO:VOLV-A, NYSE:TM, TYO:7203, KRX:005380,
             DAI:FRA, TL0:ETR, AMZ:FRA, BMW:ETR, STOHF
-        have to adjust to make work: 
+        have to adjust to make work:
             FRA:DAI (try DAI:FRA instead),  
             ETR:TL0 (try TL0:ETR instead), 
             FRA:AMZ (try AMZ:FRA instead), 
@@ -87,7 +87,7 @@ NOTE3:
     Please note! Sometimes, when entering only stock symbol
     without specifying stock exchange part, you might get
     successfully new stock added to list (stock found back); 
-    but this might not be always work or give correct
+    but this might not always work or give intended
     stock back.
     
     For example: 
@@ -98,7 +98,7 @@ NOTE3:
         NYSE:BA or BA:NYSE instead), TL0 will 
         give TL0:FRA (you might intended TL0:ETR).
          
-    To get correct stock back, it is better to add 
+    To get intended result, it is better to add 
     always globally distinctive name.
     
 """
@@ -206,32 +206,21 @@ class StockPriceOverviewAppl(tk.Frame):
         
         print_debug_stmt('add_new_line_to_treeview_s_output_area')
         
-#         self.progressbar_should_work = True
-#         self.feedback_progress_bar.start()
         # let thread handle the add process
         self.start_pb_thread(event=None, target1=self.add_new_symbol)
-        #self.pb_thread.start()
 
     def add_new_symbol(self):
         
         self.entry_stock_symbol_field.configure(state=DISABLED)
-#         self.thread_progressbar = threading.Thread(target=self.foo)
-#         self.thread_progressbar.daemon = True
-#         self.thread_progressbar.start()
-#         root.after(20, self.check_pb_thread)
         
-        self.clean_up_plot_area()
         self.update_feedback_note_label_text(self.FEEDBACK_STR_NO_FEEDBACK)
         
         try:
             new_symbol = self.entry_stock_symbol_field.get().strip()
             if new_symbol is '' or ' ' in new_symbol:
-#                 self.progressbar_should_work = False
-#                 self.entry_stock_symbol_field.configure(state=NORMAL)
                 return
             
             # check if symbol exists at all in google finance
-#             new_symbol_global_form = ''
             try:
                 # this query is made to get actual global stock quote
                 # just in case user did not provide global
@@ -240,50 +229,20 @@ class StockPriceOverviewAppl(tk.Frame):
                 temp_list.append(new_symbol)
                 df = self.mem_manager.scape_latest_data_from_internet(temp_list)
 
-# #                 new_symbolNotGlobalPart = ''
-#                 # try using original entry as much as possible
-#                 # because returned from query data, edits a bit numbers
-#                 # (for example if to send KRX:005380 you get back
-#                 # KRS:5380, but now when sending latter, you will 
-#                 # not get back result)
-#                 if not self.is_entered_text_representing_stock_symbol_possibly_in_global_form(new_symbol):
-#                     # probably local form
-#                     # treat as in local form, not in global form; e.g. 
-#                     # quote TSLA (instead of NASDAQ:TSLA)
-#                     # TODO
-# #                     local_stock_symbol = new_symbol.upper()
-# #                     new_symbol_global_form = str(df.at[0, 'Index']).upper() + ':' + new_symbolNotGlobalPart.upper()
-#                     new_symbol_global_form = new_symbol
-# 
-#                 else:
-#                     # being global already 
-#                     new_symbol_global_form = new_symbol.upper()
-                    
             except HTTPError as e:
                 self.update_feedback_note_label_text(self.FEEDBACK_STR_QUOTE_NOT_FOUND)
                 print('expected error', 'during quote confirm:', type(e), '≤≥', e, '\n')
-#                 self.progressbar_should_work = False
-#                 self.entry_stock_symbol_field.configure(state=NORMAL)
                 return
             
             except URLError as e:
                 self.update_feedback_note_label_text(self.FEEDBACK_STR_NO_INTERNET)
                 print('expected error', 'during quote confirm:', type(e), '≤≥', e, '\n', format_exc())
-#                 self.progressbar_should_work = False
-#                 self.entry_stock_symbol_field.configure(state=NORMAL)
                 return
             
             except Exception as e:
                 self.update_feedback_note_label_text(self.FEEDBACK_STR_NO_FEEDBACK)
                 print('error', 'during quote confirm:', type(e), '≤≥', e, '\n', format_exc())
-#                 self.progressbar_should_work = False
-#                 self.entry_stock_symbol_field.configure(state=NORMAL)
                 return
-            
-#             if not self.is_entered_text_representing_stock_symbol_possibly_in_global_form(new_symbol):
-#                 # if still not global form, then can not work
-#                 # w that input string; call input not usable
-#                 return
             
             # duplicate check
             current_symbols = []
@@ -293,8 +252,6 @@ class StockPriceOverviewAppl(tk.Frame):
             if new_symbol in [cs.upper() for cs in current_symbols]:
                 # duplicate found; exit
                 self.update_feedback_note_label_text(self.FEEDBACK_STR_ALREADY_LISTED)
-#                 self.progressbar_should_work = False
-#                 self.entry_stock_symbol_field.configure(state=NORMAL)
                 return
 
             print_debug_stmt('new_symbol')
@@ -309,41 +266,6 @@ class StockPriceOverviewAppl(tk.Frame):
         except Exception as e:
             print('error', 'during adding new line to output:', type(e), '≤≥', e, '\n', format_exc())
         
-#         self.progressbar_should_work = False
-#         self.entry_stock_symbol_field.configure(state=NORMAL)
-        
-    def ask_to_produce_plot_for_period_from_days_back_until_first_working_day_before_today(self, days_to_decrement):
-        
-        self.update_feedback_note_label_text(self.FEEDBACK_STR_NO_FEEDBACK)
-        
-        # only when one line is selected in table area
-        if len(self.treeview_s_output_area_tree.selection()) == 1:
-            
-            self.today = date.today()
-            # first find out last working day, before today
-            # don't include today in calculation (as there is no data on that day)
-            self.last_working_day = self.last_working_day_before_given_date(self.today)
-            self.lwd_in_string = self.last_working_day.strftime('%d.%m.%Y')
-            date_temp_str_var = tk.StringVar()
-            date_temp_str_var.set(self.lwd_in_string)
-            # store new date into input field 'to date'
-            self.entry_time_to_field['textvariable'] = date_temp_str_var
-            
-            before = self.last_working_day - timedelta(days=int(days_to_decrement))
-            
-            # now find out if this last day was working day
-            self.lwdm1_in_string = before.strftime('%d.%m.%Y')
-            date_temp_str_var = tk.StringVar()
-            date_temp_str_var.set(self.lwdm1_in_string)
-            # store new date into input field 'from date'
-            self.entry_time_from_field['textvariable'] = date_temp_str_var
-            
-            # ask plot area to follow
-            self.draw_plot()
-         
-        else:
-            self.update_feedback_note_label_text(self.FEEDBACK_STR_NO_STOCK_SELECTED)
-           
     def last_working_day_before_given_date(self, date_given):
         
         last_working_day_was = date_given
@@ -359,136 +281,6 @@ class StockPriceOverviewAppl(tk.Frame):
             last_working_day_was = date_given - timedelta(days=1)
         return last_working_day_was
                                                   
-    def draw_plot_when_click_on_time_input_btn(self, days_to_decrement):
-        # this is convenience method (method name simplification)
-        
-        self.ask_to_produce_plot_for_period_from_days_back_until_first_working_day_before_today(days_to_decrement)
-
-    def draw_plot_when_return_on_time_input_entry(self, event):
-        # this is convenience method (method name to explain its source, discards the event, redirects)
-         
-        # TODO; disabled because google finance change       
-        #self.draw_plot()
-        pass
-    
-    def draw_plot_when_select_on_output_list_item(self, event):
-        # this is convenience method (method name to explain its source, discards the event, redirects)
-        
-        # TODO; disabled because google finance change       
-        #self.draw_plot()
-        pass
-        
-    def draw_plot(self):
-        
-        try:
-            # only if exactly one line is selected in output area table (tree view)
-            if len(self.treeview_s_output_area_tree.selection()) == 1:
-               
-                self.clean_up_plot_area() 
-                
-                selected = self.treeview_s_output_area_tree.selection()[0]
-                stock_symbol_global_selected = self.treeview_s_output_area_tree.item(selected)['values'][0]
-                
-                date_start_of_from_field = self.entry_time_from_field.get().strip()
-                date_end_of_to_field = self.entry_time_to_field.get().strip()
-      
-                # convert to date objects
-                atime = datetime.strptime(date_start_of_from_field, '%d.%m.%Y')
-                btime = datetime.strptime(date_end_of_to_field, '%d.%m.%Y')
-                 
-                one_stock_data_on_dates_DF = DataReader(stock_symbol_global_selected, 'google', atime, btime)
-                # TODO
-                
-                # actual plotting here
-                # take only the index column and the close column
-                # and make a plot
-                stock_close_data_DF = one_stock_data_on_dates_DF['Close']
- 
-                # must include import here (and not in head of file),
-                # because otherwise will fail under macOS
-                # with macOS system error
-                import matplotlib.pyplot as plt
-                
-                try:
-                    plt.close('all')
-                    # this is to close previous/all figures opened thus far;
-                    # otherwise will receive:
-                    '''.../python3.6/xxx/matplotlib/pyplot.py:524: RuntimeWarning: 
-                    More than 20 figures have been opened. Figures created through 
-                    the pyplot interface (`matplotlib.pyplot.figure`) are retained 
-                    until explicitly closed and may consume too much memory. (To 
-                    control this warning, see the rcParam `figure.max_open_warning`).
-                    max_open_warning, RuntimeWarning)'''
-                
-                except Exception as e:
-                    pass
-                
-                fig = plt.figure(num=None, figsize=(3, 3.5), dpi=100, tight_layout=True)
-                # ps! tight_layout is important here, without it, text on x axis goes
-                # over the bottom line partly, and is hidden, and it is not easy to get
-                # it scaled (none found yet), other than using this argument
-                subplot = fig.add_subplot(111)
-                subplot.plot(stock_close_data_DF)
-                #subplot.plot(stock_close_data_DF,marker='o')
-                
-                # it is also important that labels on x axis
-                # will all be visible, therefore rotate them
-                # (otherwise they are overlapping, and some
-                # text unreadable)
-                locs, labels = plt.xticks()
-                plt.setp(labels, rotation=90)
-                
-                plt.grid(True, which='major', linestyle='--')
-                
-                plt_canvas = FigureCanvasTkAgg(fig, master=self.frame4)
-                plt_canvas.show()
-         
-                self.clean_up_plot_area()
-               
-                self.plot_canvas_widget = plt_canvas.get_tk_widget()
-                self.plot_canvas_widget.pack(fill=BOTH)
-                
-                self.update_feedback_note_label_text(self.FEEDBACK_STR_NO_FEEDBACK)
-                
-            else:
-                self.update_feedback_note_label_text(self.FEEDBACK_STR_NO_STOCK_SELECTED)
-            
-        except RemoteDataError as e:                
-            print('expected error', 'skipped plotting because of:', type(e), '≤≥', e, '\n', format_exc())
-            self.update_feedback_note_label_text(self.FEEDBACK_STR_NO_HISTORICAL_DATA_FOUND)
-
-            self.clean_up_plot_area()
-
-        except ConnectionError as e:
-            print('expected error', 'skipped plotting because of:', type(e), '≤≥', e, '\n', format_exc())
-            self.update_feedback_note_label_text(self.FEEDBACK_STR_NO_INTERNET)
-            
-            self.clean_up_plot_area()
-                
-        except Exception as e:
-            print('error', 'skipped plotting because of:', type(e), '≤≥', e, '\n', format_exc())
-            self.update_feedback_note_label_text(self.FEEDBACK_STR_NO_FEEDBACK)
-            
-            self.clean_up_plot_area()
-        
-        # always, after plotting, move focus to output area table; 
-        # below, need to give it some time otherwise focus might not work
-        # (not 100%, but mostly reliable)
-        root.after(400, lambda: self.treeview_s_output_area_tree.focus_set())
-        
-    def clean_up_plot_area(self):
-        """Will clean away the old plot (if it was there;
-        if it wasn't then it just executes pass)"""
-            
-        try:
-            self.plot_canvas_widget = self.plot_canvas_widget
-            self.plot_canvas_widget.destroy()
-            # need to replace existing, by deleting the previous first
-        
-        except Exception as e:
-            # also expected - probably no plot to remove
-            pass    
-
     def update_feedback_note_label_text(self, newText):
         """Will be called to update text of feedback label"""
         
@@ -515,13 +307,11 @@ class StockPriceOverviewAppl(tk.Frame):
     def refresh_treeview_s_output_area(self):
         
         self.start_pb_thread(event=None, target1=self.refresh_content)
-        #self.pb_thread.start()
         
     def refresh_content(self):        
         
         self.entry_stock_symbol_field.configure(state=DISABLED)
         
-#         self.feedback_progress_bar.start(10)
         try:
             self.delete_all_lines_in_treeview_s_output_area_table()
             self.fetch_and_renew_treeview_s_output_area(initial=False)
@@ -536,9 +326,7 @@ class StockPriceOverviewAppl(tk.Frame):
             print('error', 'during refresh output area', type(e), e, '\n', format_exc())
             
         finally:
-            self.clean_up_plot_area()
             self.entry_stock_symbol_field.configure(state=NORMAL)
-#             self.feedback_progress_bar.stop()
             
     def fetch_and_renew_treeview_s_output_area(self, initial=True):
         """ Renew memory (includes fetching correct data) and 
@@ -566,7 +354,6 @@ class StockPriceOverviewAppl(tk.Frame):
         # from provided dataframe, extract 'stock symbol', 'last updated', 'price'
 
         for i in range(0, len(user_state_data)):
-#             stock_symbol_global_form = str(user_state_data.iloc[i, 1]) + ":" + str(user_state_data.iloc[i, 0])
 
             # semantic match #1 FOLLOW-UP (begin)
             stock_symbol = str(user_state_data.iloc[i, 0])
@@ -584,8 +371,6 @@ class StockPriceOverviewAppl(tk.Frame):
             
             data_cleaned.append([stock_symbol, company_name, source, last_trade_time, last_trade_price])
             # semantic match #1 FOLLOW-UP (end)
-            
-            #data_cleaned.append([str(data.iloc[i, 0]), data.iloc[i, 1], data.iloc[i, 2]])
         
         print_debug_stmt('build_treeview_s_output_area_table_from_memory for')
  
@@ -605,25 +390,6 @@ class StockPriceOverviewAppl(tk.Frame):
             self.treeview_s_output_area_tree.insert('', 0, text=str(data_list[0]), values=data_list)
             # semantic match #1 FOLLOW-UP (end)
         
-        # on tree react on select 
-        #    (on key (arrow up and down) or 
-        #    button (left mouse click) release 
-        #    (stress on release! event should be binded not on to the 
-        #    time of select/key press - otherwise get wrong info -, but 
-        #    to their release) 
-        # plot area should follow (plot will be recreated)
-        self.treeview_s_output_area_tree.bind('<ButtonRelease-1>', self.draw_plot_when_select_on_output_list_item)
-        self.treeview_s_output_area_tree.bind('<KeyRelease-Up>', self.draw_plot_when_select_on_output_list_item)
-        self.treeview_s_output_area_tree.bind('<KeyRelease-Down>', self.draw_plot_when_select_on_output_list_item)
-
-    def create_plot_area(self): 
-        
-        # this would hold plot, initially it has no plot (is empty)
-        self.frame4 = tk.Frame(self, relief=RAISED, borderwidth=1, height=352)
-        # ps! height is important here to get right - it was taken from
-        # the height of the actual plot (found out by repeated plot creating)
-        self.frame4.pack(fill=BOTH, expand=True)
-
     def create_popup_menu(self):
         # popup menu will be usually hidden;
         # it will appear only when mouse right click
@@ -647,75 +413,6 @@ class StockPriceOverviewAppl(tk.Frame):
                                         anchor='e', font='Verdana 11')
         self.feedback_note_label.pack(expand=True, fill=BOTH)
 
-#plot area to be removed
-#     def create_input_line_at_down_for_plot(self):
-#         
-#         self.frame3 = tk.Frame(self, relief=RAISED, borderwidth=1)
-#         self.frame3.pack(fill=BOTH, expand=True)
-#         
-#         self.five_days_plot_btn = tk.Button(self.frame3, text='5d', state=DISABLED)
-#         self.five_days_plot_btn['command'] = lambda: self.draw_plot_when_click_on_time_input_btn(days_to_decrement=5)
-#         self.five_days_plot_btn.pack(side=LEFT, padx=2, pady=2)
-#         
-#         self.two_weeks_plot_btn = tk.Button(self.frame3, text='2w', state=DISABLED)
-#         self.two_weeks_plot_btn['command'] = lambda: self.draw_plot_when_click_on_time_input_btn(days_to_decrement=14)
-#         self.two_weeks_plot_btn.pack(side=LEFT, padx=2, pady=2)
-#         
-#         self.one_month_plot_btn = tk.Button(self.frame3, text='1m', state=DISABLED)
-#         self.one_month_plot_btn['command'] = lambda: self.draw_plot_when_click_on_time_input_btn(days_to_decrement=30)
-#         self.one_month_plot_btn.pack(side=LEFT, padx=2, pady=2)
-#         
-#         self.three_months_plot_btn = tk.Button(self.frame3, text='3m', state=DISABLED)
-#         self.three_months_plot_btn['command'] = lambda: self.draw_plot_when_click_on_time_input_btn(days_to_decrement=90)
-#         self.three_months_plot_btn.pack(side=LEFT, padx=2, pady=2)
-#         
-#         self.six_months_plot_btn = tk.Button(self.frame3, text='6m', state=DISABLED)
-#         self.six_months_plot_btn['command'] = lambda: self.draw_plot_when_click_on_time_input_btn(days_to_decrement=150)
-#         self.six_months_plot_btn.pack(side=LEFT, padx=2, pady=2)
-#         
-#         self.one_year_plot_btn = tk.Button(self.frame3, text='1y', state=DISABLED)
-#         self.one_year_plot_btn['command'] = lambda: self.draw_plot_when_click_on_time_input_btn(days_to_decrement=365)
-#         self.one_year_plot_btn.pack(side=LEFT, padx=2, pady=2)
-#         
-#         self.two_years_plot_btn = tk.Button(self.frame3, text='2y', state=DISABLED)
-#         self.two_years_plot_btn['command'] = lambda: self.draw_plot_when_click_on_time_input_btn(days_to_decrement=730)
-#         self.two_years_plot_btn.pack(side=LEFT, padx=2, pady=2)
-#         
-#         self.three_years_plot_btn = tk.Button(self.frame3, text='3y', state=DISABLED)
-#         self.three_years_plot_btn['command'] = lambda: self.draw_plot_when_click_on_time_input_btn(days_to_decrement=1095)
-#         self.three_years_plot_btn.pack(side=LEFT, padx=2, pady=2)
-#         
-#         self.five_years_plot_btn = tk.Button(self.frame3, text='5y', state=DISABLED)
-#         self.five_years_plot_btn['command'] = lambda: self.draw_plot_when_click_on_time_input_btn(days_to_decrement=1825)
-#         self.five_years_plot_btn.pack(side=LEFT, padx=2, pady=2)
-#         
-#         # input field 'from date'
-#         self.entry_time_from_field = tk.Entry(self.frame3, state=DISABLED)
-#         self.entry_time_from_field.bind('<Return>', 
-#                                         self.draw_plot_when_return_on_time_input_entry)
-#         self.entry_time_from_field.config(width=10)
-#         self.entry_time_from_field.pack(side=LEFT, pady=5)
-#         
-#         self.defatult_start_date = tk.StringVar()
-#         self.defatult_start_date.set('01.01.2017')
-#         # TODO needs review and testing - fixed static text entering here;
-#         # might this cause possible date format problem if 
-#         # starting app under computer with different locale?
-#         self.entry_time_from_field['textvariable'] = self.defatult_start_date
-#         
-#         # input field 'to date'
-#         self.entry_time_to_field = tk.Entry(self.frame3, state=DISABLED)
-#         self.entry_time_to_field.bind('<Return>', 
-#                                         self.draw_plot_when_return_on_time_input_entry)
-#         self.entry_time_to_field.config(width=10)
-#         self.entry_time_to_field.pack(side=LEFT)
-#         
-#         self.defatult_end_date = tk.StringVar()
-#         self.today = date.today()
-#         self.today_in_string = self.today.strftime('%d.%m.%Y')
-#         self.defatult_end_date.set(self.today_in_string)
-#         self.entry_time_to_field['textvariable'] = self.defatult_end_date
-        
     def create_treeview_s_output_area(self):
         
         try:
@@ -738,9 +435,6 @@ class StockPriceOverviewAppl(tk.Frame):
 
             for col_head in COL_NAMES:
                 self.treeview_s_output_area_tree.heading(col_head, text=col_head)
-#             self.treeview_s_output_area_tree.heading('symbol', text='Symbol')
-#             self.treeview_s_output_area_tree.heading('date', text='Last updated')
-#             self.treeview_s_output_area_tree.heading('price', text='Price')
             
             # get data and fill table
             self.fetch_and_renew_treeview_s_output_area()
@@ -764,29 +458,16 @@ class StockPriceOverviewAppl(tk.Frame):
     
     def create_feedback_at_up(self):
 
-#         s = ttk.Style()
-#         s.theme_use('classic')
         s = ttk.Style()
         s.theme_use('clam')
+        # or classic
         s.configure("grey.Horizontal.TProgressbar", foreground='blue', background='grey')
-# #         s.configure("blue.Horizontal.TProgressbar", foreground='blue', background='blue')
         self.feedback_progress_bar = ttk.Progressbar(self.frame1, orient='horizontal',
                                         mode='indeterminate', style="grey.Horizontal.TProgressbar")
-#                                         length=100, mode='indeterminate')
-#         self.feedback_progress_bar.pack(fill=BOTH, padx=10, pady=10)
-        #self.feedback_progress_bar.pack()
-        #self.feedback_progress_bar.config(width=8)
         self.feedback_progress_bar.pack(side=LEFT, padx=10, fill=X, expand=True)
-#         self.feedback_progress_bar.update_idletasks()
-#         self.feedback_progress_bar.start()
         
         self.start_pb_thread()
         
-        #foo_thread.start()
-        #root.after(20, check_pb_thread)
-#         self.feedback_progress_bar.stop()
-#         self.feedback_progress_bar.start(10)
-
     pb_thread = None
      
     def check_pb_thread(self):
@@ -846,10 +527,8 @@ class StockPriceOverviewAppl(tk.Frame):
         self.create_feedback_at_up()
         self.create_controls_at_up()
         self.create_treeview_s_output_area()
-        #self.create_input_line_at_down_for_plot()
         self.create_feedback_label_at_down()
         self.create_popup_menu()
-        #self.create_plot_area()
 
     def __init__(self, master=None):
         
@@ -894,21 +573,6 @@ if __name__ == '__main__':
     app.mainloop()
 
 """ 
-Current commit solved:
-    * google finance exists no more -- adapting; changed
-
-errors, issues, good-to-haves:
-
-    errors:
-        chart side (historical data side) does not work anymore
-        - because of dependency, google finance side, has ceased
-        (https://github.com/pydata/pandas-datareader/issues/395)
-        14 Nov 2017 following did not work:
-            sudo pip3.6 install pandas_datareader --upgrade
-            (https://stackoverflow.com/a/46356247)
-            (because edit made to change that includes related url finance.google.com change,
-            does not build, https://github.com/pydata/pandas-datareader/issues/391)
-    
     other soft issues:
         - need testing of "#TODO needs review" part 
     
