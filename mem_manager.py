@@ -2,13 +2,15 @@
 Author: Dm4Rnde (dm4rnde@pm.me)
 """
 
+
+from shared_constants import *
+from scraper import WebResourceFetcher 
+
 from traceback import format_exc
 from pandas import DataFrame
 from pandas import read_csv
+from pandas.errors import EmptyDataError
 
-from shared_constants import *
-
-from scraper import WebResourceFetcher 
 
 """
 Manages memory (state data):

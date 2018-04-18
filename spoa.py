@@ -2,35 +2,35 @@
 Author: Dm4Rnde (dm4rnde@pm.me)
 """
 
+
+from shared_constants import *
+from mem_manager import SPOAMemoryManager
+
 import time
 import threading
-from mem_manager import SPOAMemoryManager
-import tkinter as tk    
-from tkinter import ttk
-from tkinter import LEFT, RIGHT, BOTH, RAISED, X
-from tkinter import DISABLED, NORMAL
-# license note: tkinter is part of python, probably licensed under PSFL 
-# (which is BSD compatible)
 
 from datetime import date
 from datetime import datetime
 from datetime import timedelta
 import calendar
 
+import tkinter as tk    
+# license note: tkinter is part of python, probably licensed under PSFL 
+# (which is BSD compatible)
+from tkinter import ttk
+from tkinter import LEFT, RIGHT, BOTH, RAISED, X
+from tkinter import DISABLED, NORMAL
+
+from pandas import DataFrame
 # license note: pandas, has BSD 3-Clause License, it is BSD-licensed library
 # http://pandas.pydata.org/pandas-docs/stable/overview.html#license
 # https://github.com/pandas-dev/pandas/blob/master/setup.py
-from pandas import DataFrame
-from pandas.errors import EmptyDataError
-
-from requests.exceptions import ConnectionError
 
 from urllib.error import URLError
 from urllib.error import HTTPError
 
 from traceback import format_exc
 
-from shared_constants import *
 
 """
 spoa - Stock Price Overview Application
@@ -551,12 +551,12 @@ class StockPriceOverviewAppl(tk.Frame):
         except Exception as e:
             print('error', 'during init:', e, '\n', format_exc())
     
-    #for 'react on window resize' debugging only-->
-#     def onceSizeReady(self, event):
-#         w, h = self.winfo_reqwidth(), self.winfo_reqheight()
-#         print(w,h)
-#         #gives current window size
-    #<--
+    ##for 'react on window resize' debugging only-->
+     #def onceSizeReady(self, event):
+         #w, h = self.winfo_reqwidth(), self.winfo_reqheight()
+         #print(w,h)
+         ##gives current window size
+    ##<--
       
 if __name__ == '__main__':
     root = tk.Tk()

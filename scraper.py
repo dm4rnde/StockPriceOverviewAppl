@@ -2,6 +2,9 @@
 Author: Dm4Rnde (dm4rnde@pm.me)
 """
 
+
+from shared_constants import *
+
 from pandas import DataFrame
 from pandas import concat as concatdfs
 from datetime import datetime
@@ -9,7 +12,6 @@ from datetime import date
 from requests import get as requestsget
 from lxml.html import fromstring
 
-from shared_constants import *
 
 class ScrapeFailedException(Exception):
     pass
