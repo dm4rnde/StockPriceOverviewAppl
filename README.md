@@ -1,4 +1,4 @@
-# StockPriceOverviewAppl (Stock Price Overview Application)
+# Stock Price Overview Application
 
 <br>
 
@@ -9,6 +9,13 @@ Short and **basic GUI application written in Python** that **uses tkinter**.
 <br>
 
 Application allows to query latest price of given stock.
+<br>
+<br>
+
+#### Usage
+
+Entry point is **spoa.py**.
+
 <br>
 <br>
 
