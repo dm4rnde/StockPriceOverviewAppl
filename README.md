@@ -14,9 +14,12 @@ Application allows to query latest price of list of stocks.
 
 #### Usage
 
-Entry point is **spoa.py**.
+Please clone the project.
 
-<br>
+Setup environment (see below).
+
+Start **spoa.py** with python (i.e. `python3.6 spoa.py`).
+
 <br>
 
 #### In case of 'does not start/run'
