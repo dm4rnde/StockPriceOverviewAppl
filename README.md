@@ -4,7 +4,7 @@
 
 
 Short and **basic GUI application written in Python** that **uses tkinter**.
-<br>Created to test practice using tkinter.
+<br>Created to acquaint oneself with tkinter.
 
 <br>
 
