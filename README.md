@@ -14,7 +14,9 @@ Application allows to query latest price of list of stocks.
 
 #### Usage
 
-Please clone the project.
+Clone the project.
+
+`git clone https://github.com/dm4rnde/StockPriceOverviewAppl.git`
 
 Setup environment (see below).
 
