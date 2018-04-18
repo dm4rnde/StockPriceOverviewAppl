@@ -48,3 +48,5 @@ Specifics that surrounded application at the moment of development:
 - (did run/tested under macOS 10.12.6)
 
 For more details see **requirements.txt** (and commands.txt).
+
+<br>
