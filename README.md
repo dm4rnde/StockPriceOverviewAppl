@@ -24,6 +24,7 @@ Setup environment (see below for Specifics).
 Start **spoa.py** with python (i.e. `python3.6 spoa.py`).
 
 <br>
+<br>
 
 #### If does not start/run
 
@@ -35,6 +36,7 @@ code is built to rely on, have changed or become defunct.<br>
 
 - You are welcome to fork and make your own version. <br>
 
+<br>
 <br>
 
 #### Specifics
