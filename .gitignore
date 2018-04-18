@@ -1,8 +1,13 @@
 # Project specific files #
 # add here
 iters_bef_iteration28/
-StateDataForStockPriceOverviewAppl.csv
+StateDataForStockPriceOverviewAppl*.csv
 tmp/
+__pycache__/
+testsDEV/
+
+# Py dev env
+venv/
 
 # generated files
 bin/

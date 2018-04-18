@@ -1,41 +1,34 @@
-<br>
-
-> Because module this app depends on does
-> not work anymore (google finance side interrupted)
-> **graph side (stock's historical prices) does NOT WORK** at the moment.
-
-<br>
-
 # StockPriceOverviewAppl (Stock Price Overview Application)
 
 <br>
 
 
-Short and **basic GUI application written in Python** that **uses tkinter** (created for practice and study purpose only).
+Short and **basic GUI application written in Python** that **uses tkinter** (created for tkinter practice and study only).
 
-Application allows user to:
-- see current price of selected stock
-- observe historical price change of selected stock on a graph
-- add/remove stock symbols to/from list
-
+Application allows user to see current price of selected stock.
 <br>
 
 #### In case of 'does not start/run'
 
-*Note #1*. Haven't tested with other than mentioned specifics (see below).<br>
-*Note #2*. There is always possibility that when running Python program written by others, that some packages are not available/not on computer/environment (then have to try to install them manually - but this is already, out of scope of this document, and specific to every python/environment setup).<br>
-*Note #3*. And there is some awkward possibility that program might not work in certain circumstances at all (or some unknown adjustment is needed).<br>
-*Note #4*. Dependencies have become defunct.
+*Note #1*. Try set up similar environment, see below.<br>
+
+*Note #2*. This code is not actively maintained and it is 
+possible that external dependencies, that this 
+code is built to rely on, have changed or become defunct.
+
+*Note #3*. There is some awkward possibility that program might 
+not work in certain circumstances at all (or 
+some unknown adjustment is needed), and some more 
+adjustments/installations are needed.<br>
 
 <br>
 
 #### Specifics
 
-Specifics (that surrounded application at the moment of development) and external libraries/modules/packages used:
+Specifics (that surrounded application at the moment of development) and external libraries/modules/packages 
+that code is using:
 - Python 3.6.2
 - tkinter 8.5 [module/package - standard Python interface to the Tk GUI toolkit] (is part of Python)
-- json (2.0.9) [python module] (is part of Python)
-- pandas (0.20.3) [module]
-- pandas-datareader (0.5.0) [module]
-- matplotlib (2.0.2) [module]
 - (did run/tested under macOS 10.12.6)
+
+See more details in **requirements.txt**.

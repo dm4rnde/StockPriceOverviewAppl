@@ -1,56 +1,36 @@
-#%%
 """
-Copyright 2017 Dm4Rnde (dm4rnde at github.com)
+Author: Dm4Rnde (dm4rnde@pm.me)
+"""
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
- http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
-"""
-"""
-spoa - Stock Price Overview Application
-"""
-import tkinter as tk
+import time
+import threading
+from mem_manager import SPOAMemoryManager
+import tkinter as tk    
 from tkinter import ttk
-from tkinter import LEFT, RIGHT, BOTH, RAISED
-#license note: tkinter is part of python, then it is is probably licensed under PSFL (which is BSD compatible)
+from tkinter import LEFT, RIGHT, BOTH, RAISED, X
+from tkinter import DISABLED, NORMAL
+# license note: tkinter is part of python, probably licensed under PSFL 
+# (which is BSD compatible)
 
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-#license note: matplotlib, itself, uses only BSD code; is based on PSFL
-#in short: is, as is PSFL, BSD compatible
-#https://matplotlib.org/2.0.2/devel/license.html#license-discussion
-#https://github.com/matplotlib/matplotlib/blob/master/setup.py
+# license note: matplotlib, itself, uses only BSD code; is based on PSFL
+# in short: is, as is PSFL, BSD compatible
+# https://matplotlib.org/2.0.2/devel/license.html#license-discussion
+# https://github.com/matplotlib/matplotlib/blob/master/setup.py
 
 from datetime import date
 from datetime import datetime
 from datetime import timedelta
 import calendar
-#from googlefinance import getQuotes
 
-#license note: pandas, has BSD 3-Clause License, it is BSD-licensed library
-#http://pandas.pydata.org/pandas-docs/stable/overview.html#license
-#https://github.com/pandas-dev/pandas/blob/master/setup.py
+# license note: pandas, has BSD 3-Clause License, it is BSD-licensed library
+# http://pandas.pydata.org/pandas-docs/stable/overview.html#license
+# https://github.com/pandas-dev/pandas/blob/master/setup.py
 from pandas import DataFrame
-from pandas import concat as concatdfs
-from pandas import read_json
-from pandas import read_csv
 from pandas.errors import EmptyDataError
 from pandas_datareader.data import DataReader
 from pandas_datareader._utils import RemoteDataError
 
-from json import dumps
-#from json import load as loadsjson
-import json
-#license note: json is licensed under Apache2 (which is BSD compatible)
-
-from requests import get as requestsget
 from requests.exceptions import ConnectionError
 
 from urllib.error import URLError
@@ -58,47 +38,82 @@ from urllib.error import HTTPError
 
 from traceback import format_exc
 
-"""
-Pre-requirements: 
-    - requires connection to Internet
+from shared_constants import *
 
-When entering new stock, it might be easier to get correct/intended stock back if 
-entering globally distinctive name, that is in format: "stock exchange":"stock symbol"
-(examples: ETR:BMW; FRA:DAI).
-If enter short, "stock symbol" only (examples: BMW; DAI), then might not
-get back stock intended. For more, see NOTE1.
+"""
+spoa - Stock Price Overview Application
+
+
+Prerequisites: 
+    - connection to the Internet
+    (stock symbols and up-to-date data
+    is queried from the Internet)
 
 #!!# see end of file, for errors/issues unsolved, good-to-haves, or other TODOs #!!# 
 
-"""
-#Have tested application to work with:
-    #FRA:DAI, ETR:DAI, BA, NYSE:LMT, F, TSLA, ETR:TL0, STO:VOLV-A, 
-    #FRA:AMZ, ETR:BMW, NYSE:TM, TYO:7203, STO:STLO, KRX:005380
-    #
-    #All other possibilities, have not been tested.
-#
-#NOTE1:
-    #Please note! Sometimes, when entering only stock symbol
-    #without specifying stock exchange part, you might get
-    #successfully new stock added to list (stock found back); 
-    #for example, AMZN or TSLA or F, you will get NASDAQ:AMZN, 
-    #NASDAQ:TSLA, NYSE:F.
-    #But, when doing so, unfortunately the results of what 
-    #stock (of what stock exchange) you actually get back 
-    #might not be the one you intended to ask:
-    #for example, when inserting BMW, you get
-    #CVE:BMW (but you might have planned for ETR:BMW).
-    #
-    #Because of mentioned, it is better to add always globally
-    #distinctive and correct name (you might have planned the ETR:BMW):
-    #for example, enter ETR:BMW not BMW.
 
-"""Contains GUI related components and their interactions.
-Does not contain state storing/reading logic (this responsibility is 
-delegated to another object)."""
+NOTE1:
+    Have tested application with:
+        works with: 
+            ETR:DAI, NYSE:LMT, F, TSLA, STO:VOLV-A, NYSE:TM, TYO:7203, KRX:005380,
+            DAI:FRA, TL0:ETR, AMZ:FRA, BMW:ETR, STOHF
+        have to adjust to make work: 
+            FRA:DAI (try DAI:FRA instead),  
+            ETR:TL0 (try TL0:ETR instead), 
+            FRA:AMZ (try AMZ:FRA instead), 
+            ETR:BMW (try BMW:ETR),
+            BA (try NYSE:BA)
+
+    All other possibilities, have not been tested.
+
+NOTE2:
+    When entering new stock, it might be easier to 
+    get correct/intended stock back if asking 
+    distinctive symbol that google knows about, as 
+    underlying logic scrapes values from google search
+    results (first entry).
+    Globally distinctive name consist of: 
+    '<Google Finance Symbol>:<stock symbol>'
+    
+    (but if this is not getting results, try 
+    '<stock symbol>:<Google Finance Symbol>' instead)
+    .
+    
+    Google Finance Symbol can be found from
+    table here:
+    http://www.wikinvest.com/wiki/List_of_Stock_Exchanges.
+
+NOTE3:
+    Please note! Sometimes, when entering only stock symbol
+    without specifying stock exchange part, you might get
+    successfully new stock added to list (stock found back); 
+    but this might not be always work or give correct
+    stock back.
+    
+    For example: 
+        AMZN or TSLA or F, will give NASDAQ:AMZN, 
+        NASDAQ:TSLA, NYSE:F.
+    
+        But, BA will not give results (you have to use
+        NYSE:BA or BA:NYSE instead), TL0 will 
+        give TL0:FRA (you might intended TL0:ETR).
+         
+    To get correct stock back, it is better to add 
+    always globally distinctive name.
+    
+"""
+
+
+"""
+Contains GUI related components and their interactions.
+Does not contain state storing/reading logic (this 
+responsibility is delegated to another object).
+"""
 class StockPriceOverviewAppl(tk.Frame):
     
-    feedbackNoteStr = ""
+    mem_manager = None
+
+    feedback_note_str = ''
     FEEDBACK_STR_NO_FEEDBACK = ''
     FEEDBACK_STR_ALREADY_LISTED = 'already listed'
     FEEDBACK_STR_NO_INTERNET = 'no Internet connection'
@@ -107,799 +122,781 @@ class StockPriceOverviewAppl(tk.Frame):
     FEEDBACK_STR_NO_STOCK_SELECTED = 'no stock selected'
     FEEDBACK_STR_FEEDBACK = 'refreshed'
     
-    def __init__(self, master=None):
-        
-        try:
-            tk.Frame.__init__(self)
-            
-            #state storing/reading logic
-            self.memManager = SPOAMemoryManager()
-            
-            self.master.title('Stock prices overview')
-            self.createWidgets()
-            
-            #this will disallow manual resize of window
-            root.wm_resizable(0,0)
-            
-            #TODO review: this is not working
-            #self.location(150,150)
-           
-            #root.configure(background='grey')
-            
-            self.pack()
-
-            #for "react on window resize" debugging only-->
-            #self.bind("<Configure>", self.onceSizeReady)
-            #<--
-            
-        except Exception as e:
-            print('error', 'during init:', e, "\n", format_exc())
+    feedback_note_label = None
     
-    #for "react on window resize" debugging only-->
-#     def onceSizeReady(self, event):
-#         w, h = self.winfo_reqwidth(), self.winfo_reqheight()
-#         print(w,h)
-#         #gives current window size
-    #<--
-      
-    def createWidgets(self):
+    # treeview's output area tree;
+    # this is where table with stock symbols
+    # and their data appear
+    treeview_s_output_area_tree = None
+     
+    def open_popup_menu(self, event):
         
-        self.createMenu()
-        self.createInputsAtUp()
-        self.createControlsAtUp()
-        self.createOutpuAreaTable()
-        self.createInputLineAtDownForPlot()
-        self.createFeedbackLabelAtDown()
-        self.createPopupMenu()
-        self.createPlotArea()
-       
-    def createPopupMenu(self):
-        #popup menu will be usually hidden;
-        #it will appear only when mouse right click
-        #on output area (tree view)
-        
-        self.popupmenu = tk.Menu(root, tearoff=0)
-        self.popupmenu.add_command(label="remove", 
-                                   command=self.removeLineFromOutputAreaTable)
-        self.popupmenu.add_command(label="copy", 
-                                   command=self.copyStockSymbolOfSelectedLineOfOutputAreaTable)
-        self.outpAreaTree.bind("<Button-2>", self.openPopupMenu)
-
-    def openPopupMenu(self, event):
-        
-        #allow open popup only if anything selected
-        if len(self.outpAreaTree.selection()) == 1:
-            self.updateFeedbackNoteLabelText(self.FEEDBACK_STR_NO_FEEDBACK)
+        print_debug_stmt('popup open')
+        # allow open popup only if anything selected
+        if len(self.treeview_s_output_area_tree.selection()) == 1:
+            self.update_feedback_note_label_text(self.FEEDBACK_STR_NO_FEEDBACK)
             self.popupmenu.post(event.x_root, event.y_root)
     
-    def copyStockSymbolOfSelectedLineOfOutputAreaTable(self):
+    def is_entered_text_representing_stock_symbol_possibly_in_global_form(self, entered_text):
+        # global form should contain colon in it
         
-        self.updateFeedbackNoteLabelText(self.FEEDBACK_STR_NO_FEEDBACK)
-        for i in self.outpAreaTree.selection():
-            stockSymbolOfSelectedRow = self.outpAreaTree.item(i)["values"][0]
+        if ':' in entered_text:
+            return True 
+        return False
+    
+    def register_buy_stock_symbol_of_selected_line_of_treeview_s_output_area(self):
+        
+        if len(self.treeview_s_output_area_tree.selection()) == 1:
             
-            providedSymbolGlobal = stockSymbolOfSelectedRow
+            for i in self.treeview_s_output_area_tree.selection():
+                stock_symbol_selected = self.treeview_s_output_area_tree.item(i)['text']
+                
+                df = DataFrame([stock_symbol_selected])
+                df.to_clipboard(index=False, header=False)
+        
+    def copy_stock_symbol_of_selected_line_of_treeview_s_output_area(self):
+        
+        self.update_feedback_note_label_text(self.FEEDBACK_STR_NO_FEEDBACK)
+        for i in self.treeview_s_output_area_tree.selection():
+            # next will now work, because of "automatic" conversion to int
+            # (https://stackoverflow.com/questions/42701981/selection-from-a-treeview-automatically-converts-string-numbers-to-integers?noredirect=1)
+            #stock_symbol_of_selected_row = self.treeview_s_output_area_tree.item(i)['values'][0]
+            # using workaround instead, text field (it is duplicated value of first column of current row)
+            stock_symbol_selected = self.treeview_s_output_area_tree.item(i)['text']
+            print_debug_stmt('stock_symbol_selected')
+            print_debug_stmt(stock_symbol_selected)
             
-            #make use of pandas dataframe function to store
-            #text to clipboard
-            df = DataFrame([providedSymbolGlobal])
+            # make use of pandas dataframe function 
+            # to store text to clipboard
+            df = DataFrame([stock_symbol_selected])
             df.to_clipboard(index=False, header=False)
             
-    def removeLineFromOutputAreaTable(self):
+    def remove_line_from_treeview_s_output_area(self):
         
-        self.updateFeedbackNoteLabelText(self.FEEDBACK_STR_NO_FEEDBACK)
+        # let thread handle the remove process
+        self.start_pb_thread(event=None, target1=self.remove_selected_symbol)
+    
+    def remove_selected_symbol(self):
         
-        for i in self.outpAreaTree.selection():
-            stockSymbolOfSelectedRowGlobalForm = self.outpAreaTree.item(i)["values"][0]
-            self.memManager.removeStockSymbolFromMemory(stockSymbolOfSelectedRowGlobalForm)
+        print_debug_stmt('remove_selected_symbol')
+        
+        self.entry_stock_symbol_field.configure(state=DISABLED)
+        
+        self.update_feedback_note_label_text(self.FEEDBACK_STR_NO_FEEDBACK)
+        
+        for i in self.treeview_s_output_area_tree.selection():
+            print_debug_stmt('self.treeview_s_output_area_tree.item(i)')
+            print_debug_stmt(self.treeview_s_output_area_tree.item(i))
 
-        #because of change in memory must trigger update on output area table
-        self.refreshOutputAreaTable()
+            # can't rely on this option, as it will "auto convert" to int, which 
+            # is not what would like (000270 becomes 270);
+            # https://stackoverflow.com/questions/42701981/selection-from-a-treeview-automatically-converts-string-numbers-to-integers?noredirect=1
+            #stock_symbol_selected = self.treeview_s_output_area_tree.item(i)['values'][0]
             
-    def createMenu(self):
-        
-        self.menubar = tk.Menu(root)
-        self.filemenu = tk.Menu(self.menubar, tearoff=0)
-        self.menubar.add_cascade(label="File", menu=self.filemenu)
-        self.filemenu.add_command(label="Exit", command=root.destroy)
-        root.config(menu=self.menubar)
+            # using workaround instead, text field (it is duplicated value of first column of current row)
+            stock_symbol_selected = self.treeview_s_output_area_tree.item(i)['text']
+            print_debug_stmt('stock_symbol_selected')
+            print_debug_stmt(stock_symbol_selected)
+            self.mem_manager.remove_stock_symbol_from_memory(stock_symbol_selected)
 
-    def createInputsAtUp(self):
+        # because of change in memory must trigger update on output area table
+        self.refresh_treeview_s_output_area()
+            
+    def add_new_line_to_treeview_s_output_area(self, event):
         
-        self.frame1 = tk.Frame(self, relief=RAISED, borderwidth=1)
-        self.frame1.pack(fill=BOTH, expand=True)
+        print_debug_stmt('add_new_line_to_treeview_s_output_area')
         
-        #print(self.frame1.config("bg"))
-        self.entryStockSymbolLabel = tk.Label(self.frame1,
-                              text='Add stock symbol',
-                              justify="left",
-                              font="Verdana 13")
-        self.entryStockSymbolLabel.pack(side=LEFT, padx=10, pady=10)
-        
-        self.entryStockSymbolField = tk.Entry(self.frame1)
-        self.entryStockSymbolField.bind('<Return>', 
-                                        self.addNewLineToOutputAreaTable)
-        self.entryStockSymbolField.config(width=8)
-        self.entryStockSymbolField.pack(side=LEFT)
-        
+#         self.progressbar_should_work = True
+#         self.feedback_progress_bar.start()
+        # let thread handle the add process
+        self.start_pb_thread(event=None, target1=self.add_new_symbol)
+        #self.pb_thread.start()
 
-    def createControlsAtUp(self):
+    def add_new_symbol(self):
         
-        self.controlRefreshAllBtn = tk.Button(self.frame1,
-                                  text="Refresh",
-                                  command=self.refreshOutputAreaTable)
-        self.controlRefreshAllBtn.pack(side=RIGHT, padx=10, pady=10)
+        self.entry_stock_symbol_field.configure(state=DISABLED)
+#         self.thread_progressbar = threading.Thread(target=self.foo)
+#         self.thread_progressbar.daemon = True
+#         self.thread_progressbar.start()
+#         root.after(20, self.check_pb_thread)
         
-    def addNewLineToOutputAreaTable(self,event):
-        
-        self.cleanUpPlotArea()
-        self.updateFeedbackNoteLabelText(self.FEEDBACK_STR_NO_FEEDBACK)
+        self.clean_up_plot_area()
+        self.update_feedback_note_label_text(self.FEEDBACK_STR_NO_FEEDBACK)
         
         try:
-            newSymbol = self.entryStockSymbolField.get().strip()
-            if newSymbol is '':
+            new_symbol = self.entry_stock_symbol_field.get().strip()
+            if new_symbol is '' or ' ' in new_symbol:
+#                 self.progressbar_should_work = False
+#                 self.entry_stock_symbol_field.configure(state=NORMAL)
                 return
             
-            #check if symbol exists at all in google finance
-            newSymbolsGlobal = ""
+            # check if symbol exists at all in google finance
+#             new_symbol_global_form = ''
             try:
-                #this query is made to get actual global stock quote
-                #just in case user did not provide global
-                #qryForGettingFullQuote = getQuotes(newSymbol.upper())
-                #jsonDmps = dumps(qryForGettingFullQuote, indent=2)
-                #df = read_json(jsonDmps)
-                templist = []
-                templist.append(newSymbol.upper())
-                df = self.memManager.getQuotesWhenHavingListOfGloballyUniqueStockSymbols(templist)
-                newSymbolNotGlobalPart = ""
-                #try using original entry as much as possible
-                #because returned from query data, edits a bit numbers
-                #(for example if to send KRX:005380 you get back
-                #KRS:5380, but now when sending latter, you will 
-                #not get back result)
-                if ":" not in newSymbol:
-                    newSymbolNotGlobalPart = newSymbol.upper()
-                    newSymbolsGlobal = str(df.at[0,"Index"]).upper() + ":" + newSymbolNotGlobalPart.upper()
-                else:
-                    #being global already 
-                    newSymbolsGlobal = newSymbol.upper()
+                # this query is made to get actual global stock quote
+                # just in case user did not provide global
+                temp_list = []
+                new_symbol = new_symbol.upper()
+                temp_list.append(new_symbol)
+                df = self.mem_manager.scape_latest_data_from_internet(temp_list)
+
+# #                 new_symbolNotGlobalPart = ''
+#                 # try using original entry as much as possible
+#                 # because returned from query data, edits a bit numbers
+#                 # (for example if to send KRX:005380 you get back
+#                 # KRS:5380, but now when sending latter, you will 
+#                 # not get back result)
+#                 if not self.is_entered_text_representing_stock_symbol_possibly_in_global_form(new_symbol):
+#                     # probably local form
+#                     # treat as in local form, not in global form; e.g. 
+#                     # quote TSLA (instead of NASDAQ:TSLA)
+#                     # TODO
+# #                     local_stock_symbol = new_symbol.upper()
+# #                     new_symbol_global_form = str(df.at[0, 'Index']).upper() + ':' + new_symbolNotGlobalPart.upper()
+#                     new_symbol_global_form = new_symbol
+# 
+#                 else:
+#                     # being global already 
+#                     new_symbol_global_form = new_symbol.upper()
+                    
             except HTTPError as e:
-                self.updateFeedbackNoteLabelText(self.FEEDBACK_STR_QUOTE_NOT_FOUND)
-                print("expected error","during quote confirm:", type(e), "≤≥", e, "\n")
+                self.update_feedback_note_label_text(self.FEEDBACK_STR_QUOTE_NOT_FOUND)
+                print('expected error', 'during quote confirm:', type(e), '≤≥', e, '\n')
+#                 self.progressbar_should_work = False
+#                 self.entry_stock_symbol_field.configure(state=NORMAL)
                 return
+            
             except URLError as e:
-                self.updateFeedbackNoteLabelText(self.FEEDBACK_STR_NO_INTERNET)
-                print("expected error", "during quote confirm:", type(e), "≤≥", e, "\n", format_exc())
+                self.update_feedback_note_label_text(self.FEEDBACK_STR_NO_INTERNET)
+                print('expected error', 'during quote confirm:', type(e), '≤≥', e, '\n', format_exc())
+#                 self.progressbar_should_work = False
+#                 self.entry_stock_symbol_field.configure(state=NORMAL)
                 return
+            
             except Exception as e:
-                self.updateFeedbackNoteLabelText(self.FEEDBACK_STR_NO_FEEDBACK)
-                print("error", "during quote confirm:", type(e), "≤≥", e, "\n", format_exc())
+                self.update_feedback_note_label_text(self.FEEDBACK_STR_NO_FEEDBACK)
+                print('error', 'during quote confirm:', type(e), '≤≥', e, '\n', format_exc())
+#                 self.progressbar_should_work = False
+#                 self.entry_stock_symbol_field.configure(state=NORMAL)
                 return
             
-            if ":" not in newSymbolsGlobal:
-                return
+#             if not self.is_entered_text_representing_stock_symbol_possibly_in_global_form(new_symbol):
+#                 # if still not global form, then can not work
+#                 # w that input string; call input not usable
+#                 return
             
-            #duplicate check
-            currentSymbols = []
-            for c in self.outpAreaTree.get_children():
-                currentSymbols.append(self.outpAreaTree.item(c)["values"][0])
+            # duplicate check
+            current_symbols = []
+            for c in self.treeview_s_output_area_tree.get_children():
+                current_symbols.append(str(self.treeview_s_output_area_tree.item(c)['values'][0]))
             
-            if newSymbolsGlobal in [cs.upper() for cs in currentSymbols]:
-                #duplicate found; exit
-                self.updateFeedbackNoteLabelText(self.FEEDBACK_STR_ALREADY_LISTED)
+            if new_symbol in [cs.upper() for cs in current_symbols]:
+                # duplicate found; exit
+                self.update_feedback_note_label_text(self.FEEDBACK_STR_ALREADY_LISTED)
+#                 self.progressbar_should_work = False
+#                 self.entry_stock_symbol_field.configure(state=NORMAL)
                 return
 
-            self.memManager.addStockSymbolToMemory(newSymbolsGlobal)
+            print_debug_stmt('new_symbol')
+            print_debug_stmt(new_symbol)
+            self.mem_manager.add_stock_symbol_to_memory(new_symbol)
             
-            #clean entry field
-            self.entryStockSymbolField.delete(0, 'end')
+            # clean entry field
+            self.entry_stock_symbol_field.delete(0, 'end')
 
-            self.refreshOutputAreaTable()
+            self.refresh_treeview_s_output_area()
             
         except Exception as e:
-            print("error", "during adding new line to output:", type(e), "≤≥", e, "\n", format_exc())
+            print('error', 'during adding new line to output:', type(e), '≤≥', e, '\n', format_exc())
         
-    def createOutpuAreaTable(self):
+#         self.progressbar_should_work = False
+#         self.entry_stock_symbol_field.configure(state=NORMAL)
         
-        try:
-            self.frame2 = tk.Frame(self, relief=RAISED, borderwidth=1)
-            self.frame2.pack(fill=BOTH, expand=True)
-            
-            self.opatScroll = ttk.Scrollbar(self.frame2, orient="vertical")
-
-            #define table (in treeview form)
-            self.outpAreaTree = ttk.Treeview(self.frame2, 
-                                             selectmode="browse", 
-                                             yscrollcommand=self.opatScroll.set)
-            #selectmode=browse -- allow select only one line at a time
-            self.outpAreaTree['columns'] = ('symbol', 'date', 'price')
-            
-            self.opatScroll.configure(command=self.outpAreaTree.yview)
-            
-            self.outpAreaTree.pack(side=LEFT, fill=BOTH, expand=1)
-            self.opatScroll.pack(side=RIGHT, fill="y")
-
-            self.outpAreaTree.heading("symbol", text="Symbol")
-            self.outpAreaTree.heading("date", text="Last updated")
-            self.outpAreaTree.heading("price", text="Price")
-            
-            #get data and fill table
-            self.fetchRenewPopulateOutputAreaTable()
-
-        except URLError as e:
-            self.updateFeedbackNoteLabelText(self.FEEDBACK_STR_NO_INTERNET)
-            print("error", "during output area create:", type(e), "≤≥", e, "\n", format_exc())
-        except Exception as e:
-            self.updateFeedbackNoteLabelText(self.FEEDBACK_STR_NO_FEEDBACK)
-            print("error", "during output area create:", type(e), "≤≥", e, "\n", format_exc())
-        finally:
-            #we don't use first column, it is inconvenient here;
-            #always remove it (in case of any error or no error) -
-            #because width of the component should appear same, when 
-            #starting with error or data;
-            self.outpAreaTree['show'] = 'headings'
-            
-    def askToProducePlotForPeriodFromDaysBackUntilFirstWorkingDayBeforeToday(self, daysToDecrement):
+    def ask_to_produce_plot_for_period_from_days_back_until_first_working_day_before_today(self, days_to_decrement):
         
-        self.updateFeedbackNoteLabelText(self.FEEDBACK_STR_NO_FEEDBACK)
+        self.update_feedback_note_label_text(self.FEEDBACK_STR_NO_FEEDBACK)
         
-        #only when one line is selected in table area
-        if len(self.outpAreaTree.selection()) == 1:
+        # only when one line is selected in table area
+        if len(self.treeview_s_output_area_tree.selection()) == 1:
             
             self.today = date.today()
-            #first find out last working day, before today
-            #don't include today in calculation (as there is no data on that day)
-            self.lastWorkingDay = self.lastWorkingDayBeforeGivenDate(self.today)
-            self.lwdInString = self.lastWorkingDay.strftime("%d.%m.%Y")
-            dateTempStrVar = tk.StringVar()
-            dateTempStrVar.set(self.lwdInString)
-            #store new date into input field "to date"
-            self.entryTimeToField["textvariable"] = dateTempStrVar
+            # first find out last working day, before today
+            # don't include today in calculation (as there is no data on that day)
+            self.last_working_day = self.last_working_day_before_given_date(self.today)
+            self.lwd_in_string = self.last_working_day.strftime('%d.%m.%Y')
+            date_temp_str_var = tk.StringVar()
+            date_temp_str_var.set(self.lwd_in_string)
+            # store new date into input field 'to date'
+            self.entry_time_to_field['textvariable'] = date_temp_str_var
             
-            before = self.lastWorkingDay - timedelta(days=int(daysToDecrement))
+            before = self.last_working_day - timedelta(days=int(days_to_decrement))
             
-            #now find out if this last day was working day
-            self.lwdm1InString = before.strftime("%d.%m.%Y")
-            dateTempStrVar = tk.StringVar()
-            dateTempStrVar.set(self.lwdm1InString)
-            #store new date into input field "from date"
-            self.entryTimeFromField["textvariable"] = dateTempStrVar
+            # now find out if this last day was working day
+            self.lwdm1_in_string = before.strftime('%d.%m.%Y')
+            date_temp_str_var = tk.StringVar()
+            date_temp_str_var.set(self.lwdm1_in_string)
+            # store new date into input field 'from date'
+            self.entry_time_from_field['textvariable'] = date_temp_str_var
             
-            #ask plot area to follow
-            self.drawPlot()
+            # ask plot area to follow
+            self.draw_plot()
          
         else:
-            self.updateFeedbackNoteLabelText(self.FEEDBACK_STR_NO_STOCK_SELECTED)
+            self.update_feedback_note_label_text(self.FEEDBACK_STR_NO_STOCK_SELECTED)
            
-    def lastWorkingDayBeforeGivenDate(self, dateGiven):
+    def last_working_day_before_given_date(self, date_given):
         
-        lastWorkingDayWas = dateGiven
-        dayOfWeekInEng = calendar.day_name[dateGiven.weekday()]
-        #if today is Monday ...
-        if dayOfWeekInEng == 'Monday':
-            #... then last working day should be minus 3 days, Friday
-            lastWorkingDayWas = dateGiven - timedelta(days=3)
-        elif dayOfWeekInEng == 'Sunday':
-            #should be Friday
-            lastWorkingDayWas = dateGiven - timedelta(days=2)
+        last_working_day_was = date_given
+        day_of_week_in_eng = calendar.day_name[date_given.weekday()]
+        # if today is Monday ...
+        if day_of_week_in_eng == 'Monday':
+            # ... then last working day should be minus 3 days, Friday
+            last_working_day_was = date_given - timedelta(days=3)
+        elif day_of_week_in_eng == 'Sunday':
+            # should be Friday
+            last_working_day_was = date_given - timedelta(days=2)
         else:
-            lastWorkingDayWas = dateGiven - timedelta(days=1)
-        return lastWorkingDayWas
-                     
-    def createInputLineAtDownForPlot(self):
+            last_working_day_was = date_given - timedelta(days=1)
+        return last_working_day_was
+                                                  
+    def draw_plot_when_click_on_time_input_btn(self, days_to_decrement):
+        # this is convenience method (method name simplification)
         
-        self.frame3 = tk.Frame(self, relief=RAISED, borderwidth=1)
-        self.frame3.pack(fill=BOTH, expand=True)
-        
-        self.fiveDaysPlotBtn = tk.Button(self.frame3, text="5d")
-        self.fiveDaysPlotBtn["command"] = lambda: self.drawPlotWhenClickOnTimeInputBtn(daysToDecrement=5)
-        self.fiveDaysPlotBtn.pack(side=LEFT, padx=2, pady=2)
-        
-        self.twoWeeksPlotBtn = tk.Button(self.frame3, text="2w")
-        self.twoWeeksPlotBtn["command"] = lambda: self.drawPlotWhenClickOnTimeInputBtn(daysToDecrement=14)
-        self.twoWeeksPlotBtn.pack(side=LEFT, padx=2, pady=2)
-        
-        self.oneMonthPlotBtn = tk.Button(self.frame3, text="1m")
-        self.oneMonthPlotBtn["command"] = lambda: self.drawPlotWhenClickOnTimeInputBtn(daysToDecrement=30)
-        self.oneMonthPlotBtn.pack(side=LEFT, padx=2, pady=2)
-        
-        self.threeMonthsPlotBtn = tk.Button(self.frame3, text="3m")
-        self.threeMonthsPlotBtn["command"] = lambda: self.drawPlotWhenClickOnTimeInputBtn(daysToDecrement=90)
-        self.threeMonthsPlotBtn.pack(side=LEFT, padx=2, pady=2)
-        
-        self.sixMonthsPlotBtn = tk.Button(self.frame3, text="6m")
-        self.sixMonthsPlotBtn["command"] = lambda: self.drawPlotWhenClickOnTimeInputBtn(daysToDecrement=150)
-        self.sixMonthsPlotBtn.pack(side=LEFT, padx=2, pady=2)
-        
-        self.oneYearPlotBtn = tk.Button(self.frame3, text="1y")
-        self.oneYearPlotBtn["command"] = lambda: self.drawPlotWhenClickOnTimeInputBtn(daysToDecrement=365)
-        self.oneYearPlotBtn.pack(side=LEFT, padx=2, pady=2)
-        
-        self.twoYearsPlotBtn = tk.Button(self.frame3, text="2y")
-        self.twoYearsPlotBtn["command"] = lambda: self.drawPlotWhenClickOnTimeInputBtn(daysToDecrement=730)
-        self.twoYearsPlotBtn.pack(side=LEFT, padx=2, pady=2)
-        
-        self.threeYearsPlotBtn = tk.Button(self.frame3, text="3y")
-        self.threeYearsPlotBtn["command"] = lambda: self.drawPlotWhenClickOnTimeInputBtn(daysToDecrement=1095)
-        self.threeYearsPlotBtn.pack(side=LEFT, padx=2, pady=2)
-        
-        self.fiveYearsPlotBtn = tk.Button(self.frame3, text="5y")
-        self.fiveYearsPlotBtn["command"] = lambda: self.drawPlotWhenClickOnTimeInputBtn(daysToDecrement=1825)
-        self.fiveYearsPlotBtn.pack(side=LEFT, padx=2, pady=2)
-        
-        #input field "from date"
-        self.entryTimeFromField = tk.Entry(self.frame3)
-        self.entryTimeFromField.bind('<Return>', 
-                                        self.drawPlotWhenReturnOnTimeInputEntry)
-        self.entryTimeFromField.config(width=10)
-        self.entryTimeFromField.pack(side=LEFT, pady=5)
-        
-        self.defatultStartDate = tk.StringVar()
-        self.defatultStartDate.set("01.01.2017")
-        #TODO needs review and testing - fixed static text entering here;
-        #might this cause possible date format problem if 
-        #starting app under computer with different locale?
-        self.entryTimeFromField["textvariable"] = self.defatultStartDate
-        
-        #input field "to date"
-        self.entryTimeToField = tk.Entry(self.frame3)
-        self.entryTimeToField.bind('<Return>', 
-                                        self.drawPlotWhenReturnOnTimeInputEntry)
-        self.entryTimeToField.config(width=10)
-        self.entryTimeToField.pack(side=LEFT)
-        
-        self.defatultEndDate = tk.StringVar()
-        self.today = date.today()
-        self.todayInString = self.today.strftime("%d.%m.%Y")
-        self.defatultEndDate.set(self.todayInString)
-        self.entryTimeToField["textvariable"] = self.defatultEndDate
-        
-    def createFeedbackLabelAtDown(self):
-        
-        self.feedbackNoteLabel = tk.Label(self.frame3, text=self.feedbackNoteStr,
-                                        anchor="e", font="Verdana 11")
-        self.feedbackNoteLabel.pack(expand=True, fill=BOTH)
-                             
-    def createPlotArea(self): 
-        
-        #this would hold plot, initially it has no plot (is empty)
-        self.frame4 = tk.Frame(self, relief=RAISED, borderwidth=1, height=352)
-        #ps! height is important here to get right - it was taken from
-        #the height of the actual plot (found out by repeated plot creating)
-        self.frame4.pack(fill=BOTH, expand=True)
+        self.ask_to_produce_plot_for_period_from_days_back_until_first_working_day_before_today(days_to_decrement)
 
-    def drawPlotWhenClickOnTimeInputBtn(self, daysToDecrement):
-        #this is convenience method (method name simplification)
-        
-        self.askToProducePlotForPeriodFromDaysBackUntilFirstWorkingDayBeforeToday(daysToDecrement)
-
-    def drawPlotWhenReturnOnTimeInputEntry(self, event):
-        #this is convenience method (method name to explain its source, discards the event, redirects)
-                
-        self.drawPlot()
+    def draw_plot_when_return_on_time_input_entry(self, event):
+        # this is convenience method (method name to explain its source, discards the event, redirects)
+         
+        # TODO; disabled because google finance change       
+        #self.draw_plot()
+        pass
     
-    def drawPlotWhenSelectOnOutputListItem(self, event):
-        #this is convenience method (method name to explain its source, discards the event, redirects)
+    def draw_plot_when_select_on_output_list_item(self, event):
+        # this is convenience method (method name to explain its source, discards the event, redirects)
         
-        self.drawPlot()
+        # TODO; disabled because google finance change       
+        #self.draw_plot()
+        pass
         
-    def drawPlot(self):
+    def draw_plot(self):
         
         try:
-            #only if exactly one line is selected in output area table (tree view)
-            if len(self.outpAreaTree.selection()) == 1:
+            # only if exactly one line is selected in output area table (tree view)
+            if len(self.treeview_s_output_area_tree.selection()) == 1:
                
-                self.cleanUpPlotArea() 
+                self.clean_up_plot_area() 
                 
-                selected = self.outpAreaTree.selection()[0]
-                stockSymbolGlobalSelected = self.outpAreaTree.item(selected)["values"][0]
+                selected = self.treeview_s_output_area_tree.selection()[0]
+                stock_symbol_global_selected = self.treeview_s_output_area_tree.item(selected)['values'][0]
                 
-                #print("generating plot for",stockSymbolGlobalSelected)
-                dateStartOfFromField = self.entryTimeFromField.get().strip()
-                dateEndOfToField = self.entryTimeToField.get().strip()
-                #print(dateStartOfFromField)
-                #print(dateEndOfToField)
+                date_start_of_from_field = self.entry_time_from_field.get().strip()
+                date_end_of_to_field = self.entry_time_to_field.get().strip()
       
-                #convert to date objects
-                atime = datetime.strptime(dateStartOfFromField, "%d.%m.%Y")
-                btime = datetime.strptime(dateEndOfToField, "%d.%m.%Y")
+                # convert to date objects
+                atime = datetime.strptime(date_start_of_from_field, '%d.%m.%Y')
+                btime = datetime.strptime(date_end_of_to_field, '%d.%m.%Y')
                  
-                oneStockDataOnDatesDF = DataReader(stockSymbolGlobalSelected, 'google', atime, btime)
-                #TODO
+                one_stock_data_on_dates_DF = DataReader(stock_symbol_global_selected, 'google', atime, btime)
+                # TODO
                 
-                #actual plotting here
-                #take only the index column and the close column
-                #and make a plot
-                stockCloseDataDF = oneStockDataOnDatesDF['Close']
+                # actual plotting here
+                # take only the index column and the close column
+                # and make a plot
+                stock_close_data_DF = one_stock_data_on_dates_DF['Close']
  
-                #must include import here (and not in head of file),
-                #because otherwise will fail under macOS
-                #with macOS system error
+                # must include import here (and not in head of file),
+                # because otherwise will fail under macOS
+                # with macOS system error
                 import matplotlib.pyplot as plt
                 
                 try:
                     plt.close('all')
-                    #this is to close previous/all figures opened thus far;
-                    #otherwise will receive:
+                    # this is to close previous/all figures opened thus far;
+                    # otherwise will receive:
                     '''.../python3.6/xxx/matplotlib/pyplot.py:524: RuntimeWarning: 
                     More than 20 figures have been opened. Figures created through 
                     the pyplot interface (`matplotlib.pyplot.figure`) are retained 
                     until explicitly closed and may consume too much memory. (To 
                     control this warning, see the rcParam `figure.max_open_warning`).
                     max_open_warning, RuntimeWarning)'''
+                
                 except Exception as e:
                     pass
-                fig = plt.figure(num=None, figsize=(3,3.5), dpi=100, tight_layout=True)
-                #ps! tight_layout is important here, without it, text on x axis goes
-                #over the bottom line partly, and is hidden, and it is not easy to get
-                #it scaled (none found yet), other than using this argument
-                subplot = fig.add_subplot(111)
-                subplot.plot(stockCloseDataDF)
-                #subplot.plot(stockCloseDataDF,marker='o')
                 
-                #it is also important that labels on x axis
-                #will all be visible, therefore rotate them
-                #(otherwise they are overlapping, and some
-                #text unreadable)
+                fig = plt.figure(num=None, figsize=(3, 3.5), dpi=100, tight_layout=True)
+                # ps! tight_layout is important here, without it, text on x axis goes
+                # over the bottom line partly, and is hidden, and it is not easy to get
+                # it scaled (none found yet), other than using this argument
+                subplot = fig.add_subplot(111)
+                subplot.plot(stock_close_data_DF)
+                #subplot.plot(stock_close_data_DF,marker='o')
+                
+                # it is also important that labels on x axis
+                # will all be visible, therefore rotate them
+                # (otherwise they are overlapping, and some
+                # text unreadable)
                 locs, labels = plt.xticks()
                 plt.setp(labels, rotation=90)
                 
                 plt.grid(True, which='major', linestyle='--')
                 
-                pltCanvas = FigureCanvasTkAgg(fig, master=self.frame4)
-                pltCanvas.show()
+                plt_canvas = FigureCanvasTkAgg(fig, master=self.frame4)
+                plt_canvas.show()
          
-                self.cleanUpPlotArea()
+                self.clean_up_plot_area()
                
-                self.plotCanvasWidget = pltCanvas.get_tk_widget()
-                self.plotCanvasWidget.pack(fill=BOTH)
+                self.plot_canvas_widget = plt_canvas.get_tk_widget()
+                self.plot_canvas_widget.pack(fill=BOTH)
                 
-                self.updateFeedbackNoteLabelText(self.FEEDBACK_STR_NO_FEEDBACK)
+                self.update_feedback_note_label_text(self.FEEDBACK_STR_NO_FEEDBACK)
                 
             else:
-                self.updateFeedbackNoteLabelText(self.FEEDBACK_STR_NO_STOCK_SELECTED)
+                self.update_feedback_note_label_text(self.FEEDBACK_STR_NO_STOCK_SELECTED)
             
         except RemoteDataError as e:                
-            print("expected error", 'skipped plotting because of:', type(e), "≤≥", e, "\n", format_exc())
-            self.updateFeedbackNoteLabelText(self.FEEDBACK_STR_NO_HISTORICAL_DATA_FOUND)
+            print('expected error', 'skipped plotting because of:', type(e), '≤≥', e, '\n', format_exc())
+            self.update_feedback_note_label_text(self.FEEDBACK_STR_NO_HISTORICAL_DATA_FOUND)
 
-            self.cleanUpPlotArea()
+            self.clean_up_plot_area()
 
         except ConnectionError as e:
-            print("expected error", 'skipped plotting because of:', type(e), "≤≥", e, "\n", format_exc())
-            self.updateFeedbackNoteLabelText(self.FEEDBACK_STR_NO_INTERNET)
+            print('expected error', 'skipped plotting because of:', type(e), '≤≥', e, '\n', format_exc())
+            self.update_feedback_note_label_text(self.FEEDBACK_STR_NO_INTERNET)
             
-            self.cleanUpPlotArea()
+            self.clean_up_plot_area()
                 
         except Exception as e:
-            print("error", 'skipped plotting because of:', type(e), "≤≥", e, "\n", format_exc())
-            self.updateFeedbackNoteLabelText(self.FEEDBACK_STR_NO_FEEDBACK)
+            print('error', 'skipped plotting because of:', type(e), '≤≥', e, '\n', format_exc())
+            self.update_feedback_note_label_text(self.FEEDBACK_STR_NO_FEEDBACK)
             
-            self.cleanUpPlotArea()
+            self.clean_up_plot_area()
         
-        #always, after plotting, move focus to output area table; 
-        #below, need to give it some time otherwise focus might not work
-        #(not 100%, but mostly reliable)
-        root.after(400, lambda: self.outpAreaTree.focus_set())
+        # always, after plotting, move focus to output area table; 
+        # below, need to give it some time otherwise focus might not work
+        # (not 100%, but mostly reliable)
+        root.after(400, lambda: self.treeview_s_output_area_tree.focus_set())
         
-    def cleanUpPlotArea(self):
+    def clean_up_plot_area(self):
         """Will clean away the old plot (if it was there;
-            if it wasn't then it just executes pass)"""
+        if it wasn't then it just executes pass)"""
             
         try:
-            self.plotCanvasWidget = self.plotCanvasWidget
-            self.plotCanvasWidget.destroy()
-            #need to replace existing, by deleting the previous first
+            self.plot_canvas_widget = self.plot_canvas_widget
+            self.plot_canvas_widget.destroy()
+            # need to replace existing, by deleting the previous first
+        
         except Exception as e:
-            #also expected - probably no plot to remove
+            # also expected - probably no plot to remove
             pass    
 
-    def updateFeedbackNoteLabelText(self, newText):
+    def update_feedback_note_label_text(self, newText):
         """Will be called to update text of feedback label"""
         
-        self.feedbackNoteStr = newText + " "
+        self.feedback_note_str = newText + ' '
         try:
-            self.feedbackNoteLabel["text"] = self.feedbackNoteStr
+            self.feedback_note_label['text'] = self.feedback_note_str
+            
         except AttributeError as e:
-            #it is possible that it is called before component label
-            #has been initiated (/created/constructed);
-            #never mind, as long as the note string has been changed
-            #(here, above) the component will have this text
-            #in it once it is being constructed
-            print("expected error", "during update of feedback label", type(e), e, "\n", format_exc())
+            # it is possible that it is called before component label
+            # has been initiated (/created/constructed);
+            # never mind, as long as the note string has been changed
+            # (here, above) the component will have this text
+            # in it once it is being constructed
+            print('expected error', 'during update of feedback label', type(e), e, '\n', format_exc())
+            
         except Exception as e:
-            print("error", "during update of feedback label", type(e), e, "\n", format_exc())
+            print('error', 'during update of feedback label', type(e), e, '\n', format_exc())
         
-    def deleteAllLinesInOutputAreaTable(self):
+    def delete_all_lines_in_treeview_s_output_area_table(self):
         
-        for c in self.outpAreaTree.get_children():
-            self.outpAreaTree.delete(c)
+        for c in self.treeview_s_output_area_tree.get_children():
+            self.treeview_s_output_area_tree.delete(c)
         
-    def refreshOutputAreaTable(self):
+    def refresh_treeview_s_output_area(self):
         
+        self.start_pb_thread(event=None, target1=self.refresh_content)
+        #self.pb_thread.start()
+        
+    def refresh_content(self):        
+        
+        self.entry_stock_symbol_field.configure(state=DISABLED)
+        
+#         self.feedback_progress_bar.start(10)
         try:
-            self.deleteAllLinesInOutputAreaTable()
-            self.fetchRenewPopulateOutputAreaTable(initial=False)
+            self.delete_all_lines_in_treeview_s_output_area_table()
+            self.fetch_and_renew_treeview_s_output_area(initial=False)
 
-            self.updateFeedbackNoteLabelText(self.FEEDBACK_STR_FEEDBACK)
+            self.update_feedback_note_label_text(self.FEEDBACK_STR_FEEDBACK)
+            
         except URLError as e:
-            self.updateFeedbackNoteLabelText(self.FEEDBACK_STR_NO_INTERNET)
-            print("expected error", "during refresh output area", type(e), e, "\n", format_exc())
+            self.update_feedback_note_label_text(self.FEEDBACK_STR_NO_INTERNET)
+            print('expected error', 'during refresh output area', type(e), e, '\n', format_exc())
+            
         except Exception as e:
-            print("error", "during refresh output area", type(e), e, "\n", format_exc())
+            print('error', 'during refresh output area', type(e), e, '\n', format_exc())
+            
         finally:
-            self.cleanUpPlotArea()
-        
-    def fetchRenewPopulateOutputAreaTable(self, initial=True):
+            self.clean_up_plot_area()
+            self.entry_stock_symbol_field.configure(state=NORMAL)
+#             self.feedback_progress_bar.stop()
+            
+    def fetch_and_renew_treeview_s_output_area(self, initial=True):
         """ Renew memory (includes fetching correct data) and 
-        based on that fill output area table (tree view)"""
+        based on that fill output area table (tree view) """
 
-        self.memManager.fetchFreshDataToRenewMemory(initial)
-        #build output area table from data that is in the memory
-        self.buildOutputAreaTableFromMemory()
-    
-    def buildOutputAreaTableFromMemory(self):
-        """Extract needed info from memory and build output 
-        area table (tree view); expect memory to be up-to-date"""
-
-        #read memory;
-        data = self.memManager.getMemoryAsDataFrame()
-         
-        dataCleaned = []
-        #from provided dataframe, extract "stock symbol", "last updated", "price"
-        for i in range(0, len(data)):
-            dataCleaned.append([str(data.iloc[i,0]) + ":" + str(data.iloc[i,3]),data.iloc[i,1],data.iloc[i,2]])
- 
-        #build tree items, all will be top level items
-        for d in dataCleaned:
-            self.outpAreaTree.insert("", 0, values=[d[0],d[1],d[2]])
+        print_debug_stmt('fetch_and_renew_treeview_s_output_area')
+        self.mem_manager.fetch_fresh_data_to_renew_memory(initial)
         
-        #on tree react on select 
+        # build treeview's output area table from 
+        # data that is in the memory
+        self.build_treeview_s_output_area_table_from_memory()
+        print_debug_stmt('fetch_and_renew_treeview_s_output_area 2')
+    
+    def build_treeview_s_output_area_table_from_memory(self):
+        """Extract needed info from memory and build output 
+        area table (in treeview); expect memory to be up-to-date."""
+
+        print_debug_stmt('build_treeview_s_output_area_table_from_memory')
+        # read memory
+        user_state_data = self.mem_manager.get_memory_as_dataframe()
+        print_debug_stmt('user_state_data')
+        print_debug_stmt(user_state_data)
+        
+        data_cleaned = [] 
+        # from provided dataframe, extract 'stock symbol', 'last updated', 'price'
+
+        for i in range(0, len(user_state_data)):
+#             stock_symbol_global_form = str(user_state_data.iloc[i, 1]) + ":" + str(user_state_data.iloc[i, 0])
+
+            # semantic match #1 FOLLOW-UP (begin)
+            stock_symbol = str(user_state_data.iloc[i, 0])
+            company_name = str(user_state_data.iloc[i, 1])
+            source = str(user_state_data.iloc[i, 2])
+            last_trade_time = str(user_state_data.iloc[i, 3])
+            last_trade_price = str(user_state_data.iloc[i, 4])
+            
+            print_debug_stmt('data_cleaned')
+            print_debug_stmt(data_cleaned)
+            print_debug_stmt('stock_symbol')
+            print_debug_stmt(stock_symbol)
+            print_debug_stmt('type(stock_symbol)')
+            print_debug_stmt(type(stock_symbol))
+            
+            data_cleaned.append([stock_symbol, company_name, source, last_trade_time, last_trade_price])
+            # semantic match #1 FOLLOW-UP (end)
+            
+            #data_cleaned.append([str(data.iloc[i, 0]), data.iloc[i, 1], data.iloc[i, 2]])
+        
+        print_debug_stmt('build_treeview_s_output_area_table_from_memory for')
+ 
+        # build tree items, all will be top level items;
+        # given: list of lists
+        for data_list in data_cleaned:
+                
+            # semantic match #1 FOLLOW-UP (begin)
+            #self.treeview_s_output_area_tree.insert('', 0, values=['\''+d[0]+'\'', d[1], d[2], d[3], d[4]])
+            # '' -- don't change it
+            # 0 -- last goes to top (opposite -- 'end')
+            # text -- to be as id
+            # ps! when reading back values, they might get converted into 
+            # int incidentally, which is will skew intended type; therefore as a workaround
+            # using text value as holder for data_list[0], as its type will remain;
+            # https://stackoverflow.com/questions/42701981/selection-from-a-treeview-automatically-converts-string-numbers-to-integers?noredirect=1
+            self.treeview_s_output_area_tree.insert('', 0, text=str(data_list[0]), values=data_list)
+            # semantic match #1 FOLLOW-UP (end)
+        
+        # on tree react on select 
         #    (on key (arrow up and down) or 
         #    button (left mouse click) release 
         #    (stress on release! event should be binded not on to the 
         #    time of select/key press - otherwise get wrong info -, but 
         #    to their release) 
-        #plot area should follow (plot will be recreated)
-        self.outpAreaTree.bind("<ButtonRelease-1>", self.drawPlotWhenSelectOnOutputListItem)
-        self.outpAreaTree.bind("<KeyRelease-Up>", self.drawPlotWhenSelectOnOutputListItem)
-        self.outpAreaTree.bind("<KeyRelease-Down>", self.drawPlotWhenSelectOnOutputListItem)
+        # plot area should follow (plot will be recreated)
+        self.treeview_s_output_area_tree.bind('<ButtonRelease-1>', self.draw_plot_when_select_on_output_list_item)
+        self.treeview_s_output_area_tree.bind('<KeyRelease-Up>', self.draw_plot_when_select_on_output_list_item)
+        self.treeview_s_output_area_tree.bind('<KeyRelease-Down>', self.draw_plot_when_select_on_output_list_item)
 
-"""Manages memory - storing/reading/fetching data 
-over Internet to memory for StockPriceOverviewAppl"""
-class SPOAMemoryManager(tk.Frame):
-    #when start very first time, these are the
-    #stock symbols loaded into output area;
-    #just to have something listed
-    initialListOfStockSymbols = ['BA', 'NYSE:LMT']
-    
-    #memory1;
-    # will hold running list of correct stock symbols 
-    # (these are global, e.g. instead of VOLV-A there 
-    # would be STO:VOLV-A)
-    listOfSymbolsWhereEachElementHasGlobalSymbolForm = []
-    
-    #memory2;
-    # will hold last state;
-    # it is in DataFrame format;
-    # this is also what is stored in a state file
-    lastStateDF = DataFrame()
+    def create_plot_area(self): 
+        
+        # this would hold plot, initially it has no plot (is empty)
+        self.frame4 = tk.Frame(self, relief=RAISED, borderwidth=1, height=352)
+        # ps! height is important here to get right - it was taken from
+        # the height of the actual plot (found out by repeated plot creating)
+        self.frame4.pack(fill=BOTH, expand=True)
 
-    #file where state is stored;
-    #allows to continue where left off (most importantly, 
-    #contains stock symbols);
-    #allow to hold memory longer than possible on runtime
-    csvFilenameToStoreStateTo = 'StateDataForStockPriceOverviewAppl.csv'
-    
-    def fetchFreshDataToRenewMemory(self, initial=True):
+    def create_popup_menu(self):
+        # popup menu will be usually hidden;
+        # it will appear only when mouse right click
+        # on output area (tree view)
         
-        #compose stock symbols list [memory 1]
-        #first decide where to take stock symbols from
-        if initial:
-            #    a) starting with default list of symbols 
-            #       (fresh, new state / very first starting / use defaults)
-            try:
-                self.readStockSymbolsFromFileIntoMemory()
-                #having reached here, it means successful file read
-                # (file exists and is not empty)
-                # it means it is not initial loading after all
-                # (we will not use defaults)
-                
-                # b) continue, but now take list from a file 
-                #    (already stored state / restore / take symbols from file) 
-                
-                initial = False
-            except EmptyDataError as e:
-                #having reached here, it means file exists but it is empty;
-                # (user have intentionally cleared the list)
-                # it means it is not initial loading after all
-                
-                # b) continue, but now take list from a file 
-                #    (already stored state / restore / take symbols from file) 
+        self.popupmenu = tk.Menu(root, tearoff=0)
+        self.popupmenu.add_command(label='remove', 
+                                   command=self.remove_line_from_treeview_s_output_area)
+        self.popupmenu.add_command(label='copy symbol', 
+                                   command=self.copy_stock_symbol_of_selected_line_of_treeview_s_output_area)
+#         self.popupmenu.add_command(label='register buy', 
+#                                    command=self.register_buy_stock_symbol_of_selected_line_of_treeview_s_output_area)
+        self.treeview_s_output_area_tree.bind('<Button-3>', self.open_popup_menu)
 
-                initial = False
-            except FileNotFoundError as e:
-                #having reached here, it means file does not exist;
-                # it is initial; stay with default option a)
-                pass
-            except Exception as e:
-                print("error", "during initial data read", type(e), e, "\n", format_exc())
-                #having reached here, we encountered (unknown) exception with file
-                #that we haven't anticipated
-                # stay with option a)
-        #else:        
-        #   c) take symbols list from a memory (it is repeating visit / no need 
-        #      to read file / stock symbols are already stored in runtime memory/list,
-        #      which is already up-to-date);
-        #       it is reoccurring visit, we have already been here before;
-        #       (nothing needs to be done here)
-             
-        if initial:
-            #if a), fill memory, with symbols from default list
-            self.initiateMemoryToDefault()
-        #else memory should be filled or is intentionally empty
-       
-        self.loadNewDataFromInternetToMemory()
+    def create_feedback_label_at_down(self):
         
-    def initiateMemoryToDefault(self):
-        self.listOfSymbolsWhereEachElementHasGlobalSymbolForm = self.initialListOfStockSymbols.copy()
-        #memory 2 state is now invalid
-        self.invalidateMemory2()
-    
-    def storeMemory2IntoFile(self):
-        #as we do not need default index column, remove it also before save
-        self.lastStateDF.to_csv(self.csvFilenameToStoreStateTo, index=False)
-    
-    def getSymbolsFromMemory2WhereResultSymbolsHaveGlobalSymbolForm(self):
-        allSymbols = []
-        #this is done for convenience only (making variable shorter)
-        data = self.lastStateDF.copy()
-        for i in range(0, len(data)):
-            #get global symbol of each row
-            #(merge two column values to get global symbol)
-            allSymbols.append(str(data.iloc[i,0]) + ":" + str(data.iloc[i,3]))
-        return allSymbols
-    
-    def getMemoryAsDataFrame(self):
-        return self.getMemory2()
+        self.frame3 = tk.Frame(self, relief=RAISED, borderwidth=1)
+        self.frame3.pack(fill=BOTH, expand=True)
         
-    def getMemory2(self):
-        return self.lastStateDF.copy()
-    
-    def loadNewDataFromInternetToMemory(self):
-        #get fresh data, in dataframe format
-        dataFr = self.fetchAndPrepareDataFrameFilledWithLatestStockPrices()
-        #fill memory
-        self.renewEntireMemory(dataFr)
-  
-    def getQuotesWhenHavingListOfGloballyUniqueStockSymbols(self, listOfStocks):
-        """ lis - list of symbols where each element
-                  has global symbol form; example: 
-                      ['NASDAQ:TSLA', 'ETR:TL0', 'NASDAQ:AMZN', 
-                      'NYSE:F', 'STO:VOLV-A', 'ETR:BMW', 'NYSE:LMT', 
-                      'FRA:AMZ', 'NASDAQ:AAPL', 'ETR:VOW', 
-                      'KRX:005380', 'KRX:000270']
-        """ 
-        colNames = ['Index','LastTradeDateTimeLong','LastTradePrice','StockSymbol']
-        workdf = DataFrame(columns=colNames)
-        
-        #represents current time; as google finance should be real time
-        dateAndTimeNow = datetime.now().strftime("%Y-%d-%m %H:%M")
+        self.feedback_note_label = tk.Label(self.frame3, text=self.feedback_note_str,
+                                        anchor='e', font='Verdana 11')
+        self.feedback_note_label.pack(expand=True, fill=BOTH)
 
-        for i in listOfStocks:
-            req = requestsget('https://finance.google.com/finance?q='+i+'&output=json')
+#plot area to be removed
+#     def create_input_line_at_down_for_plot(self):
+#         
+#         self.frame3 = tk.Frame(self, relief=RAISED, borderwidth=1)
+#         self.frame3.pack(fill=BOTH, expand=True)
+#         
+#         self.five_days_plot_btn = tk.Button(self.frame3, text='5d', state=DISABLED)
+#         self.five_days_plot_btn['command'] = lambda: self.draw_plot_when_click_on_time_input_btn(days_to_decrement=5)
+#         self.five_days_plot_btn.pack(side=LEFT, padx=2, pady=2)
+#         
+#         self.two_weeks_plot_btn = tk.Button(self.frame3, text='2w', state=DISABLED)
+#         self.two_weeks_plot_btn['command'] = lambda: self.draw_plot_when_click_on_time_input_btn(days_to_decrement=14)
+#         self.two_weeks_plot_btn.pack(side=LEFT, padx=2, pady=2)
+#         
+#         self.one_month_plot_btn = tk.Button(self.frame3, text='1m', state=DISABLED)
+#         self.one_month_plot_btn['command'] = lambda: self.draw_plot_when_click_on_time_input_btn(days_to_decrement=30)
+#         self.one_month_plot_btn.pack(side=LEFT, padx=2, pady=2)
+#         
+#         self.three_months_plot_btn = tk.Button(self.frame3, text='3m', state=DISABLED)
+#         self.three_months_plot_btn['command'] = lambda: self.draw_plot_when_click_on_time_input_btn(days_to_decrement=90)
+#         self.three_months_plot_btn.pack(side=LEFT, padx=2, pady=2)
+#         
+#         self.six_months_plot_btn = tk.Button(self.frame3, text='6m', state=DISABLED)
+#         self.six_months_plot_btn['command'] = lambda: self.draw_plot_when_click_on_time_input_btn(days_to_decrement=150)
+#         self.six_months_plot_btn.pack(side=LEFT, padx=2, pady=2)
+#         
+#         self.one_year_plot_btn = tk.Button(self.frame3, text='1y', state=DISABLED)
+#         self.one_year_plot_btn['command'] = lambda: self.draw_plot_when_click_on_time_input_btn(days_to_decrement=365)
+#         self.one_year_plot_btn.pack(side=LEFT, padx=2, pady=2)
+#         
+#         self.two_years_plot_btn = tk.Button(self.frame3, text='2y', state=DISABLED)
+#         self.two_years_plot_btn['command'] = lambda: self.draw_plot_when_click_on_time_input_btn(days_to_decrement=730)
+#         self.two_years_plot_btn.pack(side=LEFT, padx=2, pady=2)
+#         
+#         self.three_years_plot_btn = tk.Button(self.frame3, text='3y', state=DISABLED)
+#         self.three_years_plot_btn['command'] = lambda: self.draw_plot_when_click_on_time_input_btn(days_to_decrement=1095)
+#         self.three_years_plot_btn.pack(side=LEFT, padx=2, pady=2)
+#         
+#         self.five_years_plot_btn = tk.Button(self.frame3, text='5y', state=DISABLED)
+#         self.five_years_plot_btn['command'] = lambda: self.draw_plot_when_click_on_time_input_btn(days_to_decrement=1825)
+#         self.five_years_plot_btn.pack(side=LEFT, padx=2, pady=2)
+#         
+#         # input field 'from date'
+#         self.entry_time_from_field = tk.Entry(self.frame3, state=DISABLED)
+#         self.entry_time_from_field.bind('<Return>', 
+#                                         self.draw_plot_when_return_on_time_input_entry)
+#         self.entry_time_from_field.config(width=10)
+#         self.entry_time_from_field.pack(side=LEFT, pady=5)
+#         
+#         self.defatult_start_date = tk.StringVar()
+#         self.defatult_start_date.set('01.01.2017')
+#         # TODO needs review and testing - fixed static text entering here;
+#         # might this cause possible date format problem if 
+#         # starting app under computer with different locale?
+#         self.entry_time_from_field['textvariable'] = self.defatult_start_date
+#         
+#         # input field 'to date'
+#         self.entry_time_to_field = tk.Entry(self.frame3, state=DISABLED)
+#         self.entry_time_to_field.bind('<Return>', 
+#                                         self.draw_plot_when_return_on_time_input_entry)
+#         self.entry_time_to_field.config(width=10)
+#         self.entry_time_to_field.pack(side=LEFT)
+#         
+#         self.defatult_end_date = tk.StringVar()
+#         self.today = date.today()
+#         self.today_in_string = self.today.strftime('%d.%m.%Y')
+#         self.defatult_end_date.set(self.today_in_string)
+#         self.entry_time_to_field['textvariable'] = self.defatult_end_date
+        
+    def create_treeview_s_output_area(self):
+        
+        try:
+            self.frame2 = tk.Frame(self, relief=RAISED, borderwidth=1)
+            self.frame2.pack(fill=BOTH, expand=True)
             
-            if req.status_code in ([200]):
-                jdat = json.loads(req.content[6:-2].decode('unicode_escape'))
-                temptupl = (jdat['exchange'],dateAndTimeNow,jdat['l'],jdat['symbol'])
-                temprowlist = []
-                temprowlist.append(temptupl)
-                tempdf = DataFrame(temprowlist,columns=colNames)
-                tempdfstomerge = [workdf,tempdf] 
-                workdf = concatdfs(tempdfstomerge)
-            else:
-                #TODO
-                pass    
-        
-        return workdf
+            self.opat_scroll = ttk.Scrollbar(self.frame2, orient='vertical')
 
-    def fetchLatestStockPricesForStocksGiven(self, listOfStocks):
-        """Returns json list, where every json unformatted"""
-        #print(listOfStocks)
-        #return getQuotes(listOfStocks)
-        return self.getQuotesWhenHavingListOfGloballyUniqueStockSymbols(listOfStocks)
-    
-    def fetchAndPrepareDataFrameFilledWithLatestStockPrices(self):
-        
-        #start with empty dataframe
-        df = DataFrame()
-        
-        #only if there are any symbols
-        if len(self.listOfSymbolsWhereEachElementHasGlobalSymbolForm) > 0:
-            #query symbol's latest price info
-            #(data received will be in json format)
-            try:
-                latestStockStateFetched = self.fetchLatestStockPricesForStocksGiven(self.listOfSymbolsWhereEachElementHasGlobalSymbolForm)
-            except Exception as e:
-                #this happens when dependency/service (here: google finance) will change
-                print('CRITICAL: problem with fetching stock data; program can not start', 
-                      "\n", type(e), "\n", e, "\n", format_exc())
-                #raise e
-                exit()
-            #jsonDmps = dumps(latestStockStateFetched, indent = 2)
-            #ask pandas help in converting from json to dataframe
-            #df = read_json(jsonDmps)
+            # define table (in treeview form)
+            self.treeview_s_output_area_tree = ttk.Treeview(self.frame2, 
+                                             selectmode='browse', 
+                                             yscrollcommand=self.opat_scroll.set)
+            # selectmode=browse -- allow select only one line at a time
+            self.treeview_s_output_area_tree['columns'] = COL_NAMES
             
-            #prepare format
-            #leave only 4 columns
-            df = latestStockStateFetched.loc[:,["Index",'LastTradeDateTimeLong', 'LastTradePrice', 'StockSymbol']].copy()
-        #else:
-            #no symbols; then user have deleted all symbols from the list; 
-            #rely on empty dataframe (empty is also a state)
-        
-        return df
+            self.opat_scroll.configure(command=self.treeview_s_output_area_tree.yview)
+            
+            self.treeview_s_output_area_tree.pack(side=LEFT, fill=BOTH, expand=1)
+            self.opat_scroll.pack(side=RIGHT, fill='y')
 
-    def readStockSymbolsFromFileIntoMemory(self):
-        
-        #read stock symbols from dataframe stored in file to a memory
-        dftemp = read_csv(self.csvFilenameToStoreStateTo)
-        self.renewEntireMemory(dftemp)
-        
-    def renewEntireMemory(self, newStateDataFrame):
-        self.renewMemory2(newStateDataFrame)
-        self.updateMemory1ByMakingItSyncWithMemory2()
-        
-    def renewMemory2(self, newStateDataFrame):
-        self.lastStateDF = newStateDataFrame.copy()
-    
-    def invalidateMemory2(self):
-        """Clears memory 2"""
-        self.lastStateDF = DataFrame()
-    
-    def updateMemory1ByMakingItSyncWithMemory2(self):
-        """Makes memory 1 up-to-date (follows memory 2)"""
-        newSymbsList = self.getSymbolsFromMemory2WhereResultSymbolsHaveGlobalSymbolForm()
-        self.updateMemory1ListOfSymbolsWhereEachElementHasGlobalSymbolForm(newSymbsList)
-    
-    def updateMemory1ListOfSymbolsWhereEachElementHasGlobalSymbolForm(self, newListOfSymbols):
-        self.listOfSymbolsWhereEachElementHasGlobalSymbolForm = newListOfSymbols
+            for col_head in COL_NAMES:
+                self.treeview_s_output_area_tree.heading(col_head, text=col_head)
+#             self.treeview_s_output_area_tree.heading('symbol', text='Symbol')
+#             self.treeview_s_output_area_tree.heading('date', text='Last updated')
+#             self.treeview_s_output_area_tree.heading('price', text='Price')
+            
+            # get data and fill table
+            self.fetch_and_renew_treeview_s_output_area()
 
-    def addStockSymbolToMemory(self, symbolGlobalFormToAdd):
-        self.addItemToMemory1(symbolGlobalFormToAdd)
-        
-    def addItemToMemory1(self, symbolGlobalFormToAdd):
-        #prerequirements: before calling, memory 2 must be up-to-date;
-        self.updateMemory1ByMakingItSyncWithMemory2()
-        self.listOfSymbolsWhereEachElementHasGlobalSymbolForm.append(symbolGlobalFormToAdd)  
-        #memory 2 state is now invalid
-        self.invalidateMemory2()
-        
-        self.loadNewDataFromInternetToMemory()
-        #and save new state to a file
-        self.storeMemory2IntoFile()
+        except URLError as e:
+            self.update_feedback_note_label_text(self.FEEDBACK_STR_NO_INTERNET)
+            print('error', 'during output area create:', type(e), '≤≥', e, '\n', format_exc())
+            
+        except Exception as e:
+            self.update_feedback_note_label_text(self.FEEDBACK_STR_NO_FEEDBACK)
+            print('error', 'during output area create:', type(e), '≤≥', e, '\n', format_exc())
+            
+        finally:
+            # we don't use first column, it is inconvenient here;
+            # always remove it (in case of any error or no error) -
+            # because width of the component should appear same, when 
+            # starting with error or data;
+            self.treeview_s_output_area_tree['show'] = 'headings'
 
-    def removeStockSymbolFromMemory(self, symbolGlobalFormToRemove):
-        self.removeItemFromMemory1(symbolGlobalFormToRemove)
-        
-    def removeItemFromMemory1(self, symbolGlobalFormToRemove):
-        #prerequirements: before calling, memory 2 must be up-to-date;
-        self.updateMemory1ByMakingItSyncWithMemory2()
-        self.listOfSymbolsWhereEachElementHasGlobalSymbolForm.remove(symbolGlobalFormToRemove)
-        #memory 2 state is now invalid
-        self.invalidateMemory2()
-        
-        self.loadNewDataFromInternetToMemory()
-        #and save new state to a file
-        self.storeMemory2IntoFile()
+    feedback_progress_bar = None
     
+    def create_feedback_at_up(self):
+
+#         s = ttk.Style()
+#         s.theme_use('classic')
+        s = ttk.Style()
+        s.theme_use('clam')
+        s.configure("grey.Horizontal.TProgressbar", foreground='blue', background='grey')
+# #         s.configure("blue.Horizontal.TProgressbar", foreground='blue', background='blue')
+        self.feedback_progress_bar = ttk.Progressbar(self.frame1, orient='horizontal',
+                                        mode='indeterminate', style="grey.Horizontal.TProgressbar")
+#                                         length=100, mode='indeterminate')
+#         self.feedback_progress_bar.pack(fill=BOTH, padx=10, pady=10)
+        #self.feedback_progress_bar.pack()
+        #self.feedback_progress_bar.config(width=8)
+        self.feedback_progress_bar.pack(side=LEFT, padx=10, fill=X, expand=True)
+#         self.feedback_progress_bar.update_idletasks()
+#         self.feedback_progress_bar.start()
+        
+        self.start_pb_thread()
+        
+        #foo_thread.start()
+        #root.after(20, check_pb_thread)
+#         self.feedback_progress_bar.stop()
+#         self.feedback_progress_bar.start(10)
+
+    pb_thread = None
+     
+    def check_pb_thread(self):
+        
+        print_debug_stmt('check_pb_thread')
+        if self.pb_thread.is_alive():
+            root.after(3, self.check_pb_thread)
+        else:
+            self.feedback_progress_bar.stop()
+            self.entry_stock_symbol_field.configure(state=NORMAL)
+        print_debug_stmt('check_pb_thread')
+
+    def start_pb_thread(self, event=None, target1=None):
+        
+        self.pb_thread = threading.Thread(target=target1)
+        self.pb_thread.daemon = True
+        self.feedback_progress_bar.start()
+        self.pb_thread.start()
+        root.after(3, self.check_pb_thread)
+            
+    def create_controls_at_up(self):
+        
+        self.control_refresh_all_btn = tk.Button(self.frame1,
+                                  text='Refresh',
+                                  command=self.refresh_treeview_s_output_area)
+        self.control_refresh_all_btn.pack(side=RIGHT, padx=10, pady=10)
+
+    def create_inputs_at_up(self):
+        
+        self.frame1 = tk.Frame(self, relief=RAISED, borderwidth=1)
+        self.frame1.pack(fill=BOTH, expand=True)
+        
+        self.entry_stock_symbol_label = tk.Label(self.frame1,
+                              text='Add stock symbol',
+                              justify='left',
+                              font='Verdana 13')
+        self.entry_stock_symbol_label.pack(side=LEFT, padx=10, pady=10)
+        
+        self.entry_stock_symbol_field = tk.Entry(self.frame1)
+        self.entry_stock_symbol_field.bind('<Return>', 
+                                        self.add_new_line_to_treeview_s_output_area)
+        self.entry_stock_symbol_field.config(width=15)
+        self.entry_stock_symbol_field.pack(side=LEFT)
+
+    def create_menu(self):
+        
+        self.menubar = tk.Menu(root)
+        self.filemenu = tk.Menu(self.menubar, tearoff=0)
+        self.menubar.add_cascade(label='File', menu=self.filemenu)
+        self.filemenu.add_command(label='Exit', command=root.destroy)
+        root.config(menu=self.menubar)
+
+    def create_widgets(self):
+        
+        self.create_menu()
+        self.create_inputs_at_up()
+        self.create_feedback_at_up()
+        self.create_controls_at_up()
+        self.create_treeview_s_output_area()
+        #self.create_input_line_at_down_for_plot()
+        self.create_feedback_label_at_down()
+        self.create_popup_menu()
+        #self.create_plot_area()
+
+    def __init__(self, master=None):
+        
+        try:
+            tk.Frame.__init__(self)
+            
+            # state storing/reading logic
+            self.mem_manager = SPOAMemoryManager()
+            
+            self.master.title('Stock prices overview')
+            
+            self.create_widgets()
+            
+            # this will disallow manual resize of window
+            root.wm_resizable(0, 0)
+            
+            # TODO review: this is not working
+            #self.location(150,150)
+           
+            #root.configure(background='grey')
+            
+            self.pack()
+
+            # for 'react on window resize' debugging only-->
+            #self.bind('<Configure>', self.onceSizeReady)
+            # <--
+            
+        except Exception as e:
+            print('error', 'during init:', e, '\n', format_exc())
+    
+    #for 'react on window resize' debugging only-->
+#     def onceSizeReady(self, event):
+#         w, h = self.winfo_reqwidth(), self.winfo_reqheight()
+#         print(w,h)
+#         #gives current window size
+    #<--
+      
 if __name__ == '__main__':
     root = tk.Tk()
 
     app = StockPriceOverviewAppl(master=root)
     app.mainloop()
-#%%
 
 """ 
+Current commit solved:
+    * google finance exists no more -- adapting; changed
+
 errors, issues, good-to-haves:
 
     errors:
@@ -911,6 +908,7 @@ errors, issues, good-to-haves:
             (https://stackoverflow.com/a/46356247)
             (because edit made to change that includes related url finance.google.com change,
             does not build, https://github.com/pydata/pandas-datareader/issues/391)
+    
     other soft issues:
         - need testing of "#TODO needs review" part 
     
@@ -919,5 +917,4 @@ errors, issues, good-to-haves:
    
     other TODOs:
         (none planned)
-
 """
