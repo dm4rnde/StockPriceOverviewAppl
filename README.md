@@ -41,7 +41,7 @@ code is built to rely on, have changed or become defunct.<br>
 Specifics that surrounded application at the moment of development:
 
 - Python 3.6.2
-- tkinter 8.5 [standard Python interface to the Tk GUI toolkit] (is part of Python)
+- tkinter 8.5 [standard Python interface to the Tk GUI toolkit]
 - (did run/tested under macOS 10.12.6)
 
 For more details see **requirements.txt** (and commands.txt).
