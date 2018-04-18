@@ -28,8 +28,6 @@ import calendar
 # https://github.com/pandas-dev/pandas/blob/master/setup.py
 from pandas import DataFrame
 from pandas.errors import EmptyDataError
-from pandas_datareader.data import DataReader
-from pandas_datareader._utils import RemoteDataError
 
 from requests.exceptions import ConnectionError
 
