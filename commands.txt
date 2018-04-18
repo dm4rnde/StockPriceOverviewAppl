@@ -8,4 +8,3 @@ virtualenv venv --system-site-packages
 #ps! sorry, your commands might differ
 
 venv/bin/pip3.6 install pandas
-venv/bin/pip3.6 install matplotlib

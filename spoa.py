@@ -12,12 +12,6 @@ from tkinter import DISABLED, NORMAL
 # license note: tkinter is part of python, probably licensed under PSFL 
 # (which is BSD compatible)
 
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-# license note: matplotlib, itself, uses only BSD code; is based on PSFL
-# in short: is, as is PSFL, BSD compatible
-# https://matplotlib.org/2.0.2/devel/license.html#license-discussion
-# https://github.com/matplotlib/matplotlib/blob/master/setup.py
-
 from datetime import date
 from datetime import datetime
 from datetime import timedelta
