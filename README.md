@@ -18,7 +18,7 @@ Clone the project.
 
 `git clone https://github.com/dm4rnde/StockPriceOverviewAppl.git`
 
-Setup environment (see below).
+Setup environment (see below for Specifics).
 
 Start **spoa.py** with python (i.e. `python3.6 spoa.py`).
 
@@ -26,16 +26,11 @@ Start **spoa.py** with python (i.e. `python3.6 spoa.py`).
 
 #### In case of 'does not start/run'
 
-- Try set up similar environment, see below.<br>
+- Tkinter might require some specific setting up.<br>
 
-- This code is not actively maintained and it is 
+- This code is *not* actively maintained and it is 
 possible that external dependencies, that this 
-code is built to rely on, have changed or become defunct.
-
-- There is some awkward possibility that program might 
-not work in certain circumstances at all (or 
-some unknown adjustment is needed), and some more 
-adjustments/installations are needed.<br>
+code is built to rely on, have changed or become defunct.<br>
 
 <br>
 
