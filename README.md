@@ -32,6 +32,8 @@ Start **spoa.py** with python (i.e. `python3.6 spoa.py`).
 possible that external dependencies, that this 
 code is built to rely on, have changed or become defunct.<br>
 
+- You are welcome to fork and make your own version. <br>
+
 <br>
 
 #### Specifics
