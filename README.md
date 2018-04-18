@@ -8,7 +8,7 @@ Short and **basic GUI application written in Python** that **uses tkinter**.
 
 <br>
 
-Application allows to query latest price of list of stocks.
+Application allows to query latest prices for given stocks.
 <br>
 <br>
 
@@ -24,7 +24,7 @@ Start **spoa.py** with python (i.e. `python3.6 spoa.py`).
 
 <br>
 
-#### In case of 'does not start/run'
+#### If does not start/run
 
 - Tkinter might require some specific setting up.<br>
 
