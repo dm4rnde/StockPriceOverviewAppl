@@ -3,9 +3,11 @@
 <br>
 
 
-Short and **basic GUI application written in Python** that **uses tkinter** (created for tkinter practice and study only).
+Short and **basic GUI application written in Python** that **uses tkinter**.
+<br>Created to test practice using tkinter.
 
 Application allows user to see current price of selected stock.
+<br>
 <br>
 
 #### In case of 'does not start/run'
@@ -25,10 +27,10 @@ adjustments/installations are needed.<br>
 
 #### Specifics
 
-Specifics (that surrounded application at the moment of development) and external libraries/modules/packages 
-that code is using:
+Specifics that surrounded application at the moment of development:
+
 - Python 3.6.2
-- tkinter 8.5 [module/package - standard Python interface to the Tk GUI toolkit] (is part of Python)
+- tkinter 8.5 [standard Python interface to the Tk GUI toolkit] (is part of Python)
 - (did run/tested under macOS 10.12.6)
 
-See more details in **requirements.txt**.
+For exact versions and more details see **requirements.txt**.
