@@ -1,5 +1,5 @@
 ```
-	NOTE! This code is not actively managed and might not work as intended!
+	NOTE! This code is not actively managed and therefore might not work as intended!
 ```
 
 # Stock Price Overview Application
